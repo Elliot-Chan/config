@@ -1,0 +1,148 @@
+{
+  "explorer.keyMappings.global": {
+    "i": false, // cancel default mapkey
+    "<c-o>": "noop",
+
+    "*": "toggleSelection",
+    "<tab>": "actionMenu",
+
+    "gk": ["wait", "expandablePrev"],
+    "gj": ["wait", "expandableNext"],
+    "h": ["wait", "collapse"],
+    "l": ["wait", "expandable?", "expand", "open"],
+    "J": ["wait", "toggleSelection", "normal:j"],
+    "K": ["wait", "toggleSelection", "normal:k"],
+    "gl": ["wait", "expand:recursive"],
+    "gh": ["wait", "collapse:recursive"],
+    "<2-LeftMouse>": [
+      "expandable?",
+      ["expanded?", "collapse", "expand"],
+      "open"
+    ],
+    "o": ["wait", "expanded?", "collapse", "expand"],
+    "<cr>": ["wait", "expandable?", "cd", "open"],
+    "e": "open",
+    "s": "open:split",
+    "E": "open:vsplit",
+    "t": "open:tab",
+    "<bs>": ["wait", "gotoParent"],
+    "gs": ["wait", "reveal:select"],
+    "il": "preview:labeling",
+    "ic": "preview:content",
+    "Il": "previewOnHover:toggle:labeling",
+    "Ic": "previewOnHover:toggle:content",
+    "II": "previewOnHover:disable",
+
+    "yp": "copyFilepath",
+    "yn": "copyFilename",
+    "yy": "copyFile",
+    "dd": "cutFile",
+    "p": "pasteFile",
+    "df": "delete",
+    "dF": "deleteForever",
+
+    "a": "addFile",
+    "A": "addDirectory",
+    "r": "rename",
+
+    "zh": "toggleHidden",
+    "g<dot>": "toggleHidden",
+    "R": "refresh",
+
+    "?": "help",
+    "q": "quit",
+    "<esc>": "esc",
+    "X": "systemExecute",
+    "gd": "listDrive",
+
+    "f": "search",
+    "F": "searchRecursive",
+
+    "gf": "gotoSource:file",
+    "gb": "gotoSource:buffer",
+
+    "[[": ["wait", "sourcePrev"],
+    "]]": ["wait", "sourceNext"],
+
+    "[i": ["wait", "indentPrev"],
+    "]i": ["wait", "indentNext"],
+
+    "[m": ["wait", "markPrev:modified"],
+    "]m": ["wait", "markNext:modified"],
+
+    "[d": ["wait", "markPrev:diagnosticError:diagnosticWarning"],
+    "]d": ["wait", "markNext:diagnosticError:diagnosticWarning"],
+    "[D": ["wait", "markPrev:diagnosticError"],
+    "]D": ["wait", "markNext:diagnosticError"],
+
+    "[c": ["wait", "markPrev:git"],
+    "]c": ["wait", "markNext:git"],
+    "<<": "gitStage",
+    ">>": "gitUnstage"
+  },
+  "npm.binPath": "yarn",
+  "suggest.completionItemKindLabels": {
+    "constructor": "\ufb25",
+    "keyword": "\uf1de",
+    "variable": "\ue79b",
+    "value": "\uf89f",
+    "operator": "\u03a8",
+    "function": "\u0192",
+    "reference": "\ufa46",
+    "constant": "\uf8fe",
+    "method": "\uf09a",
+    "struct": "\ufb44",
+    "class": "\uf0e8",
+    "interface": "\uf417",
+    "text": "\ue612",
+    "enum": "\uf435",
+    "enumMember": "\uf02b",
+    "module": "\uf40d",
+    "color": "\ue22b",
+    "property": "\ue624",
+    "field": "\uf9be",
+    "unit": "\uf475",
+    "event": "\ufacd",
+    "file": "\uf723",
+    "folder": "\uf114",
+    "snippet": "\ue60b",
+    "typeParameter": "\uf728",
+    "default": " "
+  },
+  "languageserver": {
+    "clangd": {
+      "command": "clangd",
+      "rootPatterns": ["compile_flags.txt", "compile_commands.json"],
+      "filetypes": ["c", "cc", "cpp", "c++", "objc", "objcpp"]
+    },
+    "bash": {
+      "command": "bash-language-server",
+      "args": ["start"],
+      "filetypes": ["sh"]
+    },
+    "cmake": {
+      "command": "cmake-language-server",
+      "filetypes": ["cmake"],
+      "rootPatterns": [
+        "build/"
+      ],
+      "initializationOptions": {
+        "buildDirectory": "build"
+      }
+    },
+    "digestif": {
+      "command": "digestif",
+      "filetypes": ["tex", "plaintex", "context"]
+    },
+    "efm": {
+      "command": "efm-langserver",
+      "args": [],
+      "filetypes": ["vim", "eruby", "markdown"]
+    },
+    "golang": {
+      "command": "gopls",
+      "rootPatterns": ["go.mod"],
+      "filetypes": ["go"]
+    }
+  }
+}

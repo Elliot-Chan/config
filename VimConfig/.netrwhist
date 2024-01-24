@@ -1,0 +1,12 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =7
+let g:netrw_dirhist_7='/home/elliot/rust/rc/src'
+let g:netrw_dirhist_6='/home/elliot'
+let g:netrw_dirhist_5='/home/elliot/.oh-my-zsh'
+let g:netrw_dirhist_4='/home/elliot/.oh-my-zsh/lib'
+let g:netrw_dirhist_3='/home/elliot/.oh-my-zsh'
+let g:netrw_dirhist_2='/home/elliot/.oh-my-zsh/custom'
+let g:netrw_dirhist_1='/home/elliot/.oh-my-zsh/custom/plugins'
+let g:netrw_dirhist_0='/home/elliot/.oh-my-zsh/custom/plugins/example'
+let g:netrw_dirhist_9='/home/elliot/.oh-my-zsh/custom/plugins'
+let g:netrw_dirhist_8='/home/elliot/.oh-my-zsh/custom'
