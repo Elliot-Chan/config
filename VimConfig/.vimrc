@@ -145,7 +145,7 @@ call dein#add('sonph/onehalf', { 'rtp': 'vim' })
 call dein#add('kristijanhusak/vim-hybrid-material')
 
 # snippets
-call dein#add('SirVer/ultisnips')
+# call dein#add('SirVer/ultisnips')
 call dein#add('honza/vim-snippets')
 
 # Finish Dein initialization (required)

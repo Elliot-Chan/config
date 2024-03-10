@@ -114,6 +114,11 @@ export HTTP_PROXY="http://192.168.124.2:10809"
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+export EDITOR="vim"
+function zvm_config() {
+  ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
+  ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
+}
 
 source /usr/share/zsh/share/antigen.zsh
 antigen use oh-my-zsh
@@ -136,8 +141,28 @@ antigen bundle zsh-users/zsh-autosuggestions
 # antigen bundle marlonrichert/zsh-autocomplete
 # antigen bundle zsh-users/zsh-history-substring-search
 antigen bundle jeffreytse/zsh-vi-mode
+antigen bundle desyncr/auto-ls
+# Auto updating, both of antigen and the bundles loaded in your config.
+antigen bundle unixorn/autoupdate-antigen.zshplugin
+
+# This is a calculator which runs on zsh.
+antigen bundle arzzen/calc.plugin.zsh
+antigen bundle zdharma/fast-syntax-highlighting
+antigen bundle seletskiy/zsh-git-smart-commands
+antigen bundle MichaelAquilina/zsh-you-should-use
+antigen bundle djui/alias-tips
+
+antigen bundle sudo 
 
 antigen apply
+
+# The plugin will auto execute this zvm_before_init function
+function zvm_before_init() {
+  zvm_bindkey viins '^[[A' history-beginning-search-backward
+  zvm_bindkey viins '^[[B' history-beginning-search-forward
+  zvm_bindkey vicmd '^[[A' history-beginning-search-backward
+  zvm_bindkey vicmd '^[[B' history-beginning-search-forward
+}
 
 source /usr/share/zsh/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
@@ -149,7 +174,7 @@ bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1
 
-ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
+# ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 #
@@ -159,7 +184,7 @@ ZSH_COLORIZE_STYLE="colorful"
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 #ZSH_THEME="powerlevel10k/powerlevel10k"
 
-
+export ZVM_VI_ESCAPE_BINDKEY='jk'
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
