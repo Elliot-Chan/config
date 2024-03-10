@@ -12,7 +12,8 @@ export GOPATH=$HOME/.local/go
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
-export HTTP_PROXY="http://192.168.138.2:10808"
+export GOPROXY=https://mirrors.aliyun.com/goproxy/
+export HTTP_PROXY="http://192.168.124.2:10809"
 # RUSTUP
 # export RUSTUP_UPDATE_ROOT="https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup install nightly-YYYY-mm-dd"
 # export RUSTUP_DIST_SERVER="https://mirrors.tuna.tsinghua.edu.cn/rustup install nightly-YYYY-mm-dd"
@@ -114,7 +115,6 @@ export HTTP_PROXY="http://192.168.138.2:10808"
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-source /usr/share/zsh/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 source /usr/share/zsh/share/antigen.zsh
 antigen use oh-my-zsh
 antigen bundle git
@@ -133,12 +133,13 @@ antigen bundle command-not-found
 antigen bundle zsh-users/zsh-syntax-highlighting
 antigen bundle zsh-users/zsh-autosuggestions
 # antigen bundle zsh-users/zsh-completions
-antigen bundle marlonrichert/zsh-autocomplete
+# antigen bundle marlonrichert/zsh-autocomplete
 # antigen bundle zsh-users/zsh-history-substring-search
 antigen bundle jeffreytse/zsh-vi-mode
 
 antigen apply
 
+source /usr/share/zsh/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste up-line-or-search down-line-or-search expand-or-complete accept-line push-line-or-edit)
 

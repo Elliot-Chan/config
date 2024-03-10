@@ -5,22 +5,30 @@ if has("autocmd")
 endif
 
 #Set Dein base path (required)
-g:dein_base = '/home/elliot/.local/share/dein'
-# let g:dein_base = "/home/elliot/.local/share/dein"
+# let g:dein_base = '/home/elliot/.local/share/dein'
 
-#Set Dein source path (required)
-g:dein_src = '/home/elliot/.local/share/dein/repos/github.com/Shougo/dein.vim'
+# Set Dein source path (required)
+# g:dein_src = '/home/elliot/.local/share/dein/repos/github.com/Shougo/dein.vim'
 # var g:dein_src = "/home/elliot/.local/share/dein/repos/github.com/Shougo/dein.vim"
 
 #Set Dein runtime path (required)
-execute 'set runtimepath+=' .. g:dein_src
-#Call Dein initialization (required)
-call dein#begin(g:dein_base)
+# execute 'set runtimepath+=' .. g:dein_src
+# Call Dein initialization (required)
+# call dein#begin(g:dein_base)
+if &compatible
+  set nocompatible
+endif
+filetype off
+#" append to runtime path
+set rtp+=/usr/share/vim/vimfiles
+#" initialize dein, plugins are installed to this directoryen
+call dein#begin(expand('~/.cache/dein'))
 
-call dein#add(g:dein_src)
+#call dein#add(g:dein_src)
 
 #Dein 辅助插件
-call dein#add('wsdjeg/dein-ui.vim')
+call dein#add('https://wsdjeg.net/git/dein-ui.vim/')
+# call dein#add('wsdjeg/dein-ui.vim')
 call dein#add('haya14busa/dein-command.vim')
 
 #文件浏览器
@@ -115,7 +123,7 @@ call dein#add('rust-lang/rust.vim')
 # git支持
 call dein#add('Eliot00/git-lens.vim')
 
-# 显示快捷键 
+# 显示快捷键
 call dein#add('liuchengxu/vim-which-key')
 
 # 开始屏幕
@@ -132,21 +140,13 @@ call dein#add('skanehira/preview-markdown.vim')
 g:preview_markdown_auto_update = 1
 
 # 主题设置
-if exists('+termguicolors')
-  # &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
-  # &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
-  set termguicolors
-endif
-set background=dark
 call dein#add('mhartington/oceanic-next')
 call dein#add('sonph/onehalf', { 'rtp': 'vim' })
-colorscheme onehalfdark
 call dein#add('kristijanhusak/vim-hybrid-material')
-# colorscheme hybrid_material
-# colorscheme gruvbox
-# colorscheme OceanicNext
-# hi Comment cterm = italic
-# g:airline_theme = "deus"
+
+# snippets
+call dein#add('SirVer/ultisnips')
+call dein#add('honza/vim-snippets')
 
 # Finish Dein initialization (required)
 call dein#end()
@@ -155,10 +155,17 @@ call dein#end()
 if dein#check_install()
     call dein#install()
 endif
+filetype plugin on
 # leader key
 g:maplocalleader = "\<Space>"
 g:mapleader = ','
 
+if exists('+termguicolors')
+  # &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+  # &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+  set termguicolors
+endif
+set background=dark
 # 与 vi 的兼容性设置
 set nocompatible
 
@@ -217,7 +224,7 @@ language message en_US.UTF-8
 # set fileencodings=ucs-bom,utf-8,cp936,gb18030,big5,euc-jp,euc-kr,latin1
 set fileencodings=utf-8,cp936,gb18030,big5,euc-jp,latin1
 
-# 修改 vim 的颜色 
+# 修改 vim 的颜色
 # set t_Co=256
 
 # 搜索词全小写时忽略大小写，至少有一个大写字母时，进行大小写匹配
@@ -248,3 +255,9 @@ endfunction
 
 # autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 | call KillAllFloaterm() | quit | endif
 # autocmd BufEnter * if winnr('$') == 1 | call KillAllFloaterm() | quit | endif
+colorscheme onehalfdark
+# colorscheme hybrid_material
+# colorscheme gruvbox
+# colorscheme OceanicNext
+# hi Comment cterm = italic
+# g:airline_theme = "deus"

@@ -96,7 +96,7 @@ let g:which_key_floating_opts = {
 
 nnoremap <silent> <localleader> :<c-u>WhichKey '<Space>'<CR>
 vnoremap <silent> <localleader> :<c-u>WhichKeyVisual '<Space>'<CR>
-"# g:which_key_exit = "\<Space>"
+let g:which_key_exit = "\<Space>"
 call which_key#register('<Space>', "g:which_key_map")
 
 
