@@ -1,0 +1,220 @@
+# Generated from the sway setup in ~/config/sway. Commands using Wayland-only tools
+# (wofi, grim, slurp, wl-copy, hyprlock, swaync, sworkstyle) are kept so you can
+# swap in X11 alternatives if needed.
+
+### Outputs and wallpaper
+# Replace HDMI-A-* with your xrandr names if they differ.
+exec_always --no-startup-id xrandr --output HDMI-A-3 --mode 2560x1440 --rate 60 --rotate left --pos 0x0 --output HDMI-A-2 --primary --mode 2560x1440 --rate 144 --pos 1440x0
+exec_always --no-startup-id feh --bg-fill "$HOME/Pictures/background4.jpeg" "$HOME/Pictures/background1.jpeg"
+exec_always --no-startup-id $HOME/config/sway/scripts/vncserver.sh
+
+workspace "1" output HDMI-A-2
+workspace "2" output HDMI-A-2
+workspace "7" output HDMI-A-3
+workspace "8" output HDMI-A-3
+workspace "9:VM"
+
+### Variables
+set $mod Mod4
+set $left h
+set $down j
+set $up k
+set $right l
+set $term wezterm
+set $menu wofi
+
+### Appearance
+font pango:monospace 10
+default_border none
+default_floating_border none
+floating_modifier $mod
+
+### Startup programs
+exec --no-startup-id copyq --start-server
+exec --no-startup-id fcitx5 -d
+exec_always --no-startup-id sworkstyle &> /tmp/sworkstyle.log
+exec --no-startup-id swaync -c ~/.config/swaync/config.json -s ~/.config/swaync/style.css >/dev/null
+exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock -n
+
+### Basics
+bindsym $mod+v exec copyq show
+bindsym $mod+alt+l exec i3lock
+bindsym $mod+Shift+b exec waybar
+
+bindsym $mod+Return exec $term
+bindsym $mod+Shift+Return exec $term start --class dropdown-terminal
+bindsym $mod+Shift+Alt+Return exec $term start --class bottom-terminal
+
+bindsym $mod+Shift+q kill
+bindsym $mod+d exec $menu --show drun --allow-images --insensitive -w 2 -L 20
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+e exec i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'
+
+### Moving around
+bindsym $mod+$left focus left
+bindsym $mod+$down focus down
+bindsym $mod+$up focus up
+bindsym $mod+$right focus right
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+bindsym $mod+Shift+$left move left
+bindsym $mod+Shift+$down move down
+bindsym $mod+Shift+$up move up
+bindsym $mod+Shift+$right move right
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+### Workspaces
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+5 workspace number 5
+bindsym $mod+6 workspace number 6
+bindsym $mod+7 workspace number 7
+bindsym $mod+8 workspace number 8
+bindsym $mod+9 workspace number 9
+bindsym $mod+0 workspace number 10
+
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+bindsym $mod+Shift+4 move container to workspace number 4
+bindsym $mod+Shift+5 move container to workspace number 5
+bindsym $mod+Shift+6 move container to workspace number 6
+bindsym $mod+Shift+7 move container to workspace number 7
+bindsym $mod+Shift+8 move container to workspace number 8
+bindsym $mod+Shift+9 move container to workspace number 9
+bindsym $mod+Shift+0 move container to workspace number 10
+
+bindsym $mod+shift+p mode "screenshots"
+bindsym alt+1 exec $HOME/.config/sway/scripts/screenshot-pin.sh; mode "default"
+mode "screenshots" {
+    bindsym e exec grim -g "$(slurp)" - | satty -f -; mode "default"
+    bindsym s exec $HOME/.config/sway/scripts/screenshot-pin.sh; mode "default"
+    bindsym alt+p exec grim -g "$(slurp -p)" -t ppm - | magick - -format '%[pixel:p{0,0}]' txt:- | tail -n 1 | cut -d ' ' -f 4 | wl-copy ; mode "default"
+    bindsym p exec grim -g "$(slurp)" - | wl-copy ; mode "default"
+}
+
+bindsym alt+j mode "jump"
+mode "jump" {
+  bindsym g exec $HOME/.config/sway/scripts/cycle-app.sh google-chrome
+  bindsym c exec $HOME/.config/sway/scripts/cycle-app.sh Code
+  bindsym t exec $HOME/.config/sway/scripts/cycle-app.sh "org.wezfurlong.wezterm"
+  bindsym d exec $HOME/.config/sway/scripts/cycle-app.sh "dropdown-terminal"
+  bindsym b exec $HOME/.config/sway/scripts/cycle-app.sh "bottom-terminal"
+  bindsym Return mode "default"
+  bindsym Escape mode "default"
+}
+
+bindsym $mod+g mode "layouts"
+mode "layouts" {
+  bindsym a focus parent ; mode "default"
+  bindsym f fullscreen ; mode "default"
+  bindsym s focus mode_toggle ; mode "default"
+  bindsym space floating toggle ; mode "default"
+  bindsym t focus mode_toggle; mode "default"
+  bindsym b splith ; mode "default"
+  bindsym v splitv ; mode "default"
+  bindsym Return mode "default"
+}
+
+bindsym $mod+s layout stack
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+bindsym $mod+f fullscreen
+bindsym $mod+shift+f floating toggle
+
+### Scratchpad
+bindsym $mod+Shift+z move scratchpad
+bindsym $mod+z scratchpad show
+bindsym --no-repeat $mod+Alt+z scratchpad show
+bindsym $mod+Ctrl+z workspace back_and_forth
+bindsym Shift+F12 [class="dropdown-terminal"] scratchpad show
+bindsym F12 [class="bottom-terminal"] scratchpad show
+
+### Resizing containers
+mode "resize" {
+    bindsym $left resize shrink width 10px
+    bindsym $down resize grow height 10px
+    bindsym $up resize shrink height 10px
+    bindsym $right resize grow width 10px
+    bindsym Left resize shrink width 10px
+    bindsym Down resize grow height 10px
+    bindsym Up resize shrink height 10px
+    bindsym Right resize grow width 10px
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+r mode "resize"
+
+### Utilities
+bindsym --locked XF86AudioMute exec pactl set-sink-mute \@DEFAULT_SINK@ toggle
+bindsym --locked XF86AudioLowerVolume exec pactl set-sink-volume \@DEFAULT_SINK@ -5%
+bindsym --locked XF86AudioRaiseVolume exec pactl set-sink-volume \@DEFAULT_SINK@ +5%
+bindsym --locked XF86AudioMicMute exec pactl set-source-mute \@DEFAULT_SOURCE@ toggle
+bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
+bindsym Print exec grim
+
+mode passthrough {
+  bindsym $mod+Home mode default
+}
+bindsym $mod+Home mode passthrough
+
+### Window rules
+for_window [window_role="About"] floating enable
+for_window [window_role="Organizer"] floating enable
+for_window [window_role="Preferences"] floating enable
+for_window [window_role="bubble"] floating enable
+for_window [window_role="page-info"] floating enable
+for_window [window_role="pop-up"] floating enable
+for_window [window_role="task_dialog"] floating enable
+for_window [window_role="toolbox"] floating enable
+for_window [window_role="webconsole"] floating enable
+for_window [window_type="dialog"] floating enable
+for_window [class="(?i)mplayer"] floating enable
+for_window [window_type="menu"] floating enable
+for_window [class="clash-verge"] floating enable
+for_window [class="org.fcitx.*"] floating enable
+for_window [class="org.gnome.Nautilus"] floating enable
+for_window [class="nm-connection-editor"] floating enable
+for_window [class="com.github.hluk.copyq"] floating enable
+for_window [class="swayimg"] floating enable, sticky enable, border pixel 1
+
+for_window [class="dropdown-terminal"] {
+  floating enable
+  resize set 100ppt 40ppt
+  move position 0 0
+  border pixel 1
+  move scratchpad
+  scratchpad show
+}
+
+for_window [class="bottom-terminal"] {
+  floating enable
+  resize set 100ppt 40ppt
+  move position 0ppt 60ppt
+  move scratchpad
+  scratchpad show
+}
+
+for_window [class="Code"] border pixel 2
+for_window [class="Google-chrome"] border pixel 2
+for_window [class="wemeetapp"] floating enable
+
+set $ws_vm 9
+assign [class="VirtualBox Manager"] $ws_vm
+for_window [class="VirtualBox Manager"] floating enable, move position center, resize set 1200 800
+assign [class="VirtualBox Machine"] $ws_vm
+for_window [class="VirtualBox Machine"] move to workspace $ws_vm, focus, fullscreen enable, border pixel 0
+
+### Bar
+bar {
+    status_command i3status
+}
