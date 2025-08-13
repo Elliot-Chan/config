@@ -15,6 +15,7 @@ typeset -gA CANGJIE_CONFIG=(
     [build_stdx]="false"
     [build_tools]="false"
     [build_cjdb]="false"
+    [clean_build]="false"
     [build_version]="1.0.0"
     [set_rpath]="true"
     [compiler_path]="/usr/lib/llvm15/bin"
@@ -54,9 +55,6 @@ function cangjie::_init() {
     export RPATH=${CANGJIE_CONFIG[set_rpath]:+"--set-rpath \$RPATH"}
     export PATH=${CANGJIE_CONFIG[compiler_path]}:$PATH
     export cangjie_sdk_path=${CANGJIE_CONFIG[cangjie_sdk_path]}
-
-    # 创建工作空间目录（实际物理操作）
-    mkdir -p ${WORKSPACE}/{cangjie_compiler,cangjie_runtime,cangjie_stdx,cangjie_tools}
 }
 
 # 构建编译器 (子Shell中运行)
@@ -65,12 +63,14 @@ function cangjie::_build_compiler() {
 
     echo "🚀 Building Cangjie Compiler..."
     cd ${WORKSPACE}/cangjie_compiler || return 1
+    mkdir -p build/build/utils_dep && cd build/build/utils_dep && ln -s $HOME/code/third_party_llvm-project || cd ../../../
+    cd third_party && ln -s $HOME/code/llvm-project || cd ..
     
-    python3 build.py clean
-    python3 build.py build -t ${build_type} ${AddOptsBuildpy} --prefix ${cangjie_sdk_path}
-    python3 build.py install
-    
-    source output/envsetup.sh
+    local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
+    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
+    python3 build.py build -t ${build_type} ${AddOptsBuildpy} \
+    && python3 build.py install --prefix ${install_dir} \
+    && source output/envsetup.sh
     cjc -v || { echo "❌ Compiler verification failed"; return 1 }
 }
 
@@ -81,13 +81,14 @@ function cangjie::_build_runtime() {
     echo "🚀 Building Cangjie Runtime..."
     cd ${WORKSPACE}/cangjie_runtime/runtime || return 1
     
-    python3 build.py clean
-    python3 build.py build -t ${build_type} -v ${build_version} --prefix ${cangjie_sdk_path}
-    python3 build.py install
+    local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
+
+    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
+    python3 build.py build -t ${build_type} -v ${build_version} \
+    && python3 build.py install --prefix ${install_dir}
     
-    local runtime_dir="${WORKSPACE}/cangjie_runtime/runtime/output/common/${kernel}_${build_type}_${cmake_arch}"
-    [[ -d "${runtime_dir}" ]] || { echo "❌ Runtime dir missing"; return 1 }
-    cp -rf "${runtime_dir}"/{lib,runtime} "${WORKSPACE}/cangjie_compiler/output"
+    [[ -d "${install_dir}" ]] || { echo "❌ Runtime dir missing"; return 1 }
+    # cp -rf "${runtime_dir}"/{lib,runtime} "${WORKSPACE}/cangjie_compiler/output"
 }
 
 # 构建标准库 (子Shell中运行)
@@ -102,12 +103,12 @@ function cangjie::_build_std() {
     echo "🚀 Building Cangjie Standard Library..."
     cd ${WORKSPACE}/cangjie_runtime/std || return 1
     
-    python3 build.py clean
+    local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
+    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
     python3 build.py build -t ${build_type} \
-        --target-lib=${WORKSPACE}/cangjie_runtime/runtime/output --prefix ${cangjie_sdk_path}
-    python3 build.py install
+    && python3 build.py install --prefix ${install_dir}
     
-    cp -rf ${WORKSPACE}/cangjie_runtime/std/output/* ${WORKSPACE}/cangjie_compiler/output/
+    # cp -rf ${WORKSPACE}/cangjie_runtime/std/output/* ${WORKSPACE}/cangjie_compiler/output/
 }
 
 # 构建STDX扩展库 (子Shell中运行)
@@ -122,12 +123,13 @@ function cangjie::_build_stdx() {
     echo "🚀 Building Cangjie STDX Extension..."
     cd ${WORKSPACE}/cangjie_stdx || return 1
     
-    python3 build.py clean
-    python3 build.py build -t ${build_type} \
-        --include=${WORKSPACE}/cangjie_compiler/include --prefix ${cangjie_sdk_path}
-    python3 build.py install
+    local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
+
+    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
+    python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include \
+    && python3 build.py install --prefix ${install_dir}
     
-    export CANGJIE_STDX_PATH="${WORKSPACE}/cangjie_stdx/target/${kernel}_${cmake_arch}_cjnative/static/stdx"
+    export CANGJIE_STDX_PATH="${install_dir}/static/stdx"
 }
 
 # 构建工具集 (子Shell中运行)
@@ -283,4 +285,47 @@ function _cangjie::comp() {
             fi
             ;;
     esac
+}
+
+function cangjie::clean() {
+  local task=$1
+    (
+        set -e
+        cangjie::_init  # 初始化子Shell环境
+        
+        case $task in
+            compiler)    cangjie::_clean_compiler ;;
+            runtime)     cangjie::_clean_runtime ;;
+            std)         cangjie::_clean_std ;;
+            stdx)        cangjie::_clean_stdx ;;
+            # tools)       cangjie::_clean_tools ;;
+            *)           echo "❌ Unknown clean target"; return 1 ;;
+        esac
+        
+        echo "✅ $task clean successfully in isolated environment"
+    )   
+}
+
+function cangjie::_clean_compiler() {
+    echo "🚀 Cleaning Cangjie Compiler..."
+    cd ${WORKSPACE}/cangjie_compiler || return 1
+    python3 build.py clean
+}
+
+function cangjie::_clean_runtime() {
+    echo "🚀 Cleaning Cangjie Compiler..."
+    cd ${WORKSPACE}/cangjie_runtime/runtime || return 1
+    python3 build.py clean
+}
+
+function cangjie::_clean_std() {
+    echo "🚀 Cleaning Cangjie Compiler..."
+    cd ${WORKSPACE}/cangjie_runtime/std || return 1
+    python3 build.py clean
+}
+
+function cangjie::_clean_stdx() {
+    echo "🚀 Cleaning Cangjie Compiler..."
+    cd ${WORKSPACE}/cangjie_stdx || return 1
+    python3 build.py clean
 }

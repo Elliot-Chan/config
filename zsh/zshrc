@@ -108,7 +108,9 @@ if [[ ! -d $ZSH_CACHE_DIR ]]; then
 fi
 
 source $ZSH/oh-my-zsh.sh
-source $HOME/.config/zsh/cangjie.zsh
+
+source $HOME/config/zsh/cangjie.zsh
+
 source /usr/share/zsh/share/antigen.zsh
 antigen bundle zdharma-continuum/fast-syntax-highlighting
 antigen bundle zsh-users/zsh-autosuggestions
@@ -120,4 +122,6 @@ function arch() { return ""}
 
 antigen apply
 cd $HOME
+
+fpath=($HOME/.zsh-complete $fpath)
 

@@ -29,6 +29,21 @@ github = "djui/alias-tips"
 [plugins.suggesstions]
 github = "zsh-users/zsh-autosuggestions"
 
+[plugins.git-extra]
+github = "tj/git-extras"
+
+[plugins.git-prompt]
+github = "olivierverdier/zsh-git-prompt"
+
+[plugins.git-open]
+github = "paulirish/git-open"
+
+[plugins.you-should-use]
+github = "MichaelAquilina/zsh-you-should-use"
+
+[plugins.autopair]
+github = "hlissner/zsh-autopair"
+
 # For example:
 #
 # [plugins.base16]
