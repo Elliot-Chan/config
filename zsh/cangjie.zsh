@@ -70,7 +70,7 @@ function cangjie::_build_compiler() {
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
     python3 build.py build -t ${build_type} ${AddOptsBuildpy} \
     && python3 build.py install --prefix ${install_dir} \
-    && source output/envsetup.sh
+    && source ${install_dir}/envsetup.sh
     cjc -v || { echo "❌ Compiler verification failed"; return 1 }
 }
 
