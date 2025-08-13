@@ -101,6 +101,8 @@ plugins=(git sudo z common-aliases command-not-found alias-finder extract histor
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+#
+export EDITOR="nvim"
 
 ZSH_CACHE_DIR=$HOME/.cache/oh-my-zsh
 if [[ ! -d $ZSH_CACHE_DIR ]]; then
@@ -109,19 +111,23 @@ fi
 
 source $ZSH/oh-my-zsh.sh
 
-source $HOME/config/zsh/cangjie.zsh
+# source /usr/share/zsh/share/antigen.zsh
+# antigen bundle zdharma-continuum/fast-syntax-highlighting
+# antigen bundle zsh-users/zsh-autosuggestions
+# antigen bundle fdellwing/zsh-bat
+# antigen bundle mdarrint/zsh-aliases-exa
+# antigen bundle djui/alias-tips
+# antigen apply
 
-source /usr/share/zsh/share/antigen.zsh
-antigen bundle zdharma-continuum/fast-syntax-highlighting
-antigen bundle zsh-users/zsh-autosuggestions
-antigen bundle fdellwing/zsh-bat
-antigen bundle mdarrint/zsh-aliases-exa
-antigen bundle djui/alias-tips
 
 function arch() { return ""}
 
-antigen apply
-cd $HOME
 
+source $HOME/config/zsh/helper.zsh
+source $HOME/config/zsh/utils.zsh
+source $HOME/config/zsh/cangjie.zsh
+source $HOME/config/zsh/custom.zsh
+
+setProxy
 fpath=($HOME/.zsh-complete $fpath)
-
+eval "$(sheldon source)"

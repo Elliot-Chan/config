@@ -43,6 +43,13 @@ github = "MichaelAquilina/zsh-you-should-use"
 
 [plugins.autopair]
 github = "hlissner/zsh-autopair"
+[plugins.enhanced]
+github = "babarot/enhancd"
+
+[plugins.autojump]
+github = "wting/autojump"
+dir = "bin"
+apply = ["PATH", "source"]
 
 # For example:
 #

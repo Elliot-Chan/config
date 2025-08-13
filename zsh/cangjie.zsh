@@ -5,7 +5,7 @@
 
 # 配置变量 (主Shell中定义，子Shell会继承拷贝)
 typeset -gA CANGJIE_CONFIG=(
-    [workspace]="$HOME/code/CJ"
+    [workspace]="$HOME/Code/CJ"
     [build_type]="relwithdebinfo"
     [kernel]="linux"
     [cmake_arch]="x86_64"
@@ -54,7 +54,7 @@ function cangjie::_init() {
     export AddOptsBuildpy=${CANGJIE_CONFIG[build_cjdb]:+"--build-cjdb"}
     export RPATH=${CANGJIE_CONFIG[set_rpath]:+"--set-rpath \$RPATH"}
     export PATH=${CANGJIE_CONFIG[compiler_path]}:$PATH
-    export cangjie_sdk_path=${CANGJIE_CONFIG[cangjie_sdk_path]}
+    export cangjie_sdk_path=${CANGJIE_CONFIG[output]}
 }
 
 # 构建编译器 (子Shell中运行)
@@ -109,7 +109,9 @@ function cangjie::_build_std() {
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
     python3 build.py build -t ${build_type} \
     && python3 build.py install --prefix ${install_dir}
-    
+
+    [[ -d "${install_dir}/output/" ]] || { echo "❌ install dir missing"; return 1 }
+
     # cp -rf ${WORKSPACE}/cangjie_runtime/std/output/* ${WORKSPACE}/cangjie_compiler/output/
 }
 
