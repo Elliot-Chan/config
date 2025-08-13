@@ -63,8 +63,10 @@ function cangjie::_build_compiler() {
 
     echo "🚀 Building Cangjie Compiler..."
     cd ${WORKSPACE}/cangjie_compiler || return 1
-    mkdir -p build/build/utils_dep && cd build/build/utils_dep && ln -s $HOME/code/third_party_llvm-project || cd ../../../
-    cd third_party && ln -s $HOME/code/llvm-project || cd ..
+    mkdir -p build/build/utils_dep && cd build/build/utils_dep && ln -s $HOME/code/third_party_llvm-project || sleep 1
+    cd ${WORKSPACE}/cangjie_compiler || return 1
+    mkdir -p third_party && cd third_party && ln -s $HOME/code/llvm-project || sleep 1
+    cd ${WORKSPACE}/cangjie_compiler || return 1
     
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
