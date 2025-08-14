@@ -46,11 +46,13 @@ invoke_exec() {
     fi
 
     INFO "\n$expr"
+    eval $expr
+
     local ret=$?
     if [[ "$verbose" == "true" || "$verbose" == "line" ]]; then
         printf '%*s' "${COLUMNS:-$(tput cols)}" '' | tr ' ' '-'
     fi
-
+    
     if [[ $ret -ne 0 ]]; then
         ERROR "\n[EXITCODE: $ret] 执行 $expr 失败\n"
         if [[ $expr =~ "cd " ]]; then
