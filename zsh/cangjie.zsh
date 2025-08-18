@@ -13,7 +13,7 @@ typeset -gA CANGJIE_CONFIG=(
     [build_runtime]="true"
     [build_std]="true"
     [build_stdx]="true"
-    [build_tools]="false"
+    [build_tools]="true"
     [build_cjdb]="false"
     [clean_build]="false"
     [build_version]="1.0.0"
@@ -35,10 +35,10 @@ function cangjie::_run_in_subshell() {
             std)          cangjie::_build_std ;;
             stdx)         cangjie::_build_stdx ;;
             basic)        cangjie::_build_basic ;;
-            tool_lsp)    cangjie::_build_tool_lsp ;;
-            tool_cjpm)   cangjie::_build_tool_cjpm ;;
-            tool_cjfmt)  cangjie::_build_tool_cjfmt ;;
-            tool_hle)    cangjie::_build_tool_hle ;;
+            tool_lsp)     cangjie::_build_tool_lsp ;;
+            tool_cjpm)    cangjie::_build_tool_cjpm ;;
+            tool_cjfmt)   cangjie::_build_tool_cjfmt ;;
+            tool_hle)     cangjie::_build_tool_hle ;;
             tools)        cangjie::_build_tools ;;
             *)            echo "❌ Unknown build target"; return 1 ;;
         esac
@@ -139,7 +139,8 @@ function cangjie::_build_stdx() {
     python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include \
     && python3 build.py install --prefix ${install_dir}
     
-    echo "🎉 Install stdx to ${install_dir}/${kernel}_${cmake_arch}_cjnative/static/stdx"
+    echo "🎉 Install stdx to ${install_dir}/${kernel}_${cmake_arch}_cjnative/\{dynamic/static\}/stdx"
+    set CANGJIE_STDX_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/\{dynamic/static\}/stdx
 }
 
 # 构建工具集 (子Shell中运行)
@@ -151,10 +152,11 @@ function cangjie::_build_tool_lsp() {
     done
 
     echo "🚀 Building Cangjie Tool: lsp..."
+    local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}/tools/bin"
     ( cd ${WORKSPACE}/cangjie_tools/cangjie-language-server/build && \
       python3 build.py clean && \
-      python3 build.py build -t ${build_type} --prefix ${cangjie_sdk_path} && \
-      python3 build.py install )
+      python3 build.py build -t ${build_type} && \
+      python3 build.py install --prefix ${install_dir} )
 }
 
 function cangjie::_build_tool_cjpm() {
@@ -165,9 +167,10 @@ function cangjie::_build_tool_cjpm() {
     done
 
     echo "🚀 Building Cangjie Tool: cjpm..."
+    local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     ( cd ${WORKSPACE}/cangjie_tools/cjpm/build && \
       python3 build.py clean && \
-      python3 build.py build -t ${build_type} --set-rpath ${RPATH} --prefix ${cangjie_sdk_path} && \
+      python3 build.py build -t ${build_type} --set-rpath ${RPATH} --prefix ${install_dir} && \
       python3 build.py install )
 }
 
@@ -179,10 +182,11 @@ function cangjie::_build_tool_cjfmt() {
       ccj
     done
 
+    local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     echo "🚀 Building Cangjie Tool: cjfmt..."
     ( cd ${WORKSPACE}/cangjie_tools/cjfmt/build && \
       python3 build.py clean && \
-      python3 build.py build -t ${build_type} --prefix ${cangjie_sdk_path} && \
+      python3 build.py build -t ${build_type} --prefix ${install_dir} && \
       python3 build.py install )
 }
 
@@ -229,6 +233,7 @@ function cangjie::build() {
         runtime)  cangjie::_run_in_subshell runtime ;;
         std)      cangjie::_run_in_subshell std ;;
         stdx)     cangjie::_run_in_subshell stdx ;;
+	lsp)	  cangjie::_run_in_subshell tool_lsp ;;
         tools)    cangjie::_run_in_subshell tools ;;
         *)
             echo "Available build targets:"
@@ -363,7 +368,7 @@ function cangjie::_clean_compiler() {
 function cangjie::_clean_runtime() {
     echo "🚀 Cleaning Cangjie Compiler..."
     cd ${WORKSPACE}/cangjie_runtime/runtime || return 1
-    python3 build.py clean
+    python3 build.py cleansadfasdf
 }
 
 function cangjie::_clean_std() {
@@ -376,4 +381,50 @@ function cangjie::_clean_stdx() {
     echo "🚀 Cleaning Cangjie Compiler..."
     cd ${WORKSPACE}/cangjie_stdx || return 1
     python3 build.py clean
+}
+
+function cjr() {
+  local filename="main.cj"
+  local test=false
+  local noClean=false
+  local verbose=false
+  local extra_options=""
+  while getopts ":f:t:n:v:e:x" opt; do
+    case $opt in
+      f) filename="$OPTARG" ;;
+      t) test="$OPTARG" ;;
+      n) noClean="true" ;;
+      v) verbose="true" ;;
+      e) extra_options="$OPTARG" ;;
+      x)
+        if [[ -z $CANGJIE_STDX_PATH ]]; then
+          echo \$CANGJIE_STDX_PATH not found.
+          return
+        fi
+        extra_options="-L $CANGJIE_STDX_PATH -lstdx.encoding.json -lstdx.serialization.serialization -lstdx.serialization -lstdx.net.http -lstdx.net.tls -lstdx.net -lstdx.logger -lstdx.log -lstdx.encoding.url -lstdx.encoding.json.stream -lstdx.crypto.keys -lstdx.crypto.x509 -lstdx.encoding.hex -lstdx.encoding.base64 -lstdx.encoding -lstdx.crypto.crypto -lstdx.crypto.digest -lstdx.crypto -lstdx.compress.zlib -lstdx.compress -lstdx --import-path $CANGJIE_STDX_PATH"
+        ;;
+      \?) ERROR "Invalid option: -$OPTARG" ;;
+    esac
+  done
+  shift $((OPTIND - 1))
+
+  local cmd="cjc -g --error-count-limit all -Woff all $extra_options $filename"
+  if [[ "$test" == "true" ]]; then
+    cmd += " --test"
+  fi
+  
+  local initial_files=($(ls))
+  invoke_exec $cmd $verbose || return -1
+  if [[ "$noClean" != "true" ]]; then
+    local current_files=($(ls))
+    for file in "${current_files[@]}"; do
+      if [[ "$file" == "main" && "$noClean" == "main" ]]; then
+        continue
+      fi
+      if [[ ! " ${initial_files[@]} " =~ " ${file} " ]]; then
+        invoke_exec "rm -r \"$files\"" "false"
+      fi
+    done
+  fi
+
 }

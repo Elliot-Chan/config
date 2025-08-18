@@ -137,9 +137,16 @@ ccj() {
     local selected_folder=${folders_list[$((choice))]}
     if [[ -n $selected_folder ]]; then
         source_envsetup $selected_folder
+        local matches=( $selected_folder/**/static/stdx(N/) )
+        if [[ ${#matches} != 0 ]]; then
+          export CANGJIE_STDX_PATH=$matches[1]
+          echo "set CANGJIE_STDX_PATH to $matches[1]"
+        fi
         which cjc
         cjc --version
     else
         echo "未找到选择的目录"
+        return -1
     fi
+
 }

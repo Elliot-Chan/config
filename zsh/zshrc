@@ -131,3 +131,4 @@ source $HOME/config/zsh/custom.zsh
 setProxy
 fpath=($HOME/.zsh-complete $fpath)
 eval "$(sheldon source)"
+alias vim="nvim"

@@ -59,8 +59,8 @@ local keys = {
    -- tabs --
    -- tabs: spawn+close
    { key = 't',          mods = mod.SUPER,     action = act.SpawnTab('DefaultDomain') },
-   { key = 't',          mods = mod.SUPER_REV, action = act.SpawnTab({ DomainName = 'WSL:Ubuntu' }) },
-   { key = 'w',          mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = false }) },
+   { key = 't',          mods = mod.SUPER_REV, action = act.SpawnTab({ DomainName = 'WSL:arch' }) },
+   { key = 'w',          mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = true }) },
 
    -- tabs: navigation
    { key = '[',          mods = mod.SUPER,     action = act.ActivateTabRelative(-1) },
@@ -115,8 +115,8 @@ local keys = {
       action = act.SplitVertical({ domain = 'CurrentPaneDomain' }),
    },
    {
-      key = [[\]],
-      mods = mod.SUPER_REV,
+      key = [[/]],
+      mods = mod.SUPER,
       action = act.SplitHorizontal({ domain = 'CurrentPaneDomain' }),
    },
 
@@ -191,9 +191,9 @@ local mouse_bindings = {
       action = act.OpenLinkAtMouseCursor,
    },
    {
-    event = { Drag = { streak = 1, button = 'Left' } },
-    mods = mod.SUPER,
-    action = wezterm.action.StartWindowDrag,
+      event = { Drag = { streak = 1, button = 'Left' } },
+      mods = mod.SUPER,
+      action = wezterm.action.StartWindowDrag,
    },
 }
 
