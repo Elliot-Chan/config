@@ -11,7 +11,7 @@ function setProxy() {
         export no_proxy="localhost,127.0.0.1,localaddress,.localdomain.com"
 }
 
-[ "$(tty)" = "/dev/tty1" ] && exec sway
+[ "$(tty)" = "/dev/tty1" ] && exec zsh -l -c sway
 
 if is_wsl; then
    cd $HOME    

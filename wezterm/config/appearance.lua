@@ -2,7 +2,6 @@ local gpu_adapters = require('utils.gpu-adapter')
 local colors = require('colors.custom')
 
 local theme = require('utils.theme')
-print("right-status setup called")
 
 return {
    max_fps = 240,
@@ -21,7 +20,8 @@ return {
    cursor_blink_rate = 650,
 
    -- color scheme
-   colors = theme.colors(),
+   -- colors = theme.colors(),
+   color_scheme = 'Catppuccin Mocha',
 
    -- scrollbar
    enable_scroll_bar = false,
@@ -39,8 +39,8 @@ return {
    -- window
    initial_cols = 160,
    initial_rows = 40,
-   window_background_opacity = 0.8,
-   window_decorations = "NONE",
+   window_background_opacity = 1,
+   window_decorations = 'NONE',
    window_padding = {
       left = 0,
       right = 0,

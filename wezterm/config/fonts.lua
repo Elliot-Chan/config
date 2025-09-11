@@ -6,9 +6,15 @@ local font_family = 'JetBrainsMono Nerd Font'
 local font_size = platform.is_mac and 15 or 14
 
 return {
-   font = wezterm.font({
-      family = font_family,
-      weight = 'Medium',
+   font = wezterm.font_with_fallback({
+      'Maple Mono Normal NL CN',
+      'IosevkaTerm Nerd Font Mono',
+      'JetBrainsMono Nerd Font', -- 你常用的主字体
+      'Font Awesome 7 Free Solid', -- 解决 U+F596 ()
+      'Font Awesome 7 Free Regular',
+      'Noto Color Emoji', -- emoji
+      'Noto Music', -- 🎜 那类特殊符号
+      'Symbola', -- 兜底 fallback
    }),
    font_size = font_size,
 

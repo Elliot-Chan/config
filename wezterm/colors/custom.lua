@@ -91,4 +91,4 @@ local colorscheme = {
    compose_cursor = mocha.flamingo,
 }
 
-return colorscheme
+return 'Catch Me If You Can'

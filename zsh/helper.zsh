@@ -142,6 +142,7 @@ ccj() {
           export CANGJIE_STDX_PATH=$matches[1]
           echo "set CANGJIE_STDX_PATH to $matches[1]"
         fi
+        export CANGJIE_SDK_PATH=$selected_folder
         which cjc
         cjc --version
     else

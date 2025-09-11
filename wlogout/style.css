@@ -1,0 +1,55 @@
+window {
+    font-family: HYLeMiaoTiJ,CaskaydiaCove Nerd Font, monospace;
+    font-size: 12pt;
+    font-weight: bold;
+    color: #f4dfcd; 
+    background-color: rgba(46, 42, 30, 0.69);
+}
+
+button {
+    background-repeat: no-repeat;
+    background-position: center;
+    font-size: 30px;
+    background-size: 40%;
+    border: none;
+    color: #d5b497;
+    text-shadow: none;
+    border-radius: 10px 10px 10px 10px;
+    background-color: rgba(121, 81, 1, 0);
+    margin-top: 40px;
+    margin-bottom: 20px;
+    transition: all 0.3s cubic-bezier(.55, 0.0, .28, 1.682), box-shadow 0.5s ease-in;
+}
+
+button:hover {
+    background-size: 50%;
+    transition: all 0.3s cubic-bezier(.55, 0.0, .28, 1.682), box-shadow 0.5s ease-in;
+}
+
+#lock {
+    background-image: image(url("/home/elliot/.config/wlogout/icons/lock.png"));
+}
+
+#logout {
+    background-image: image(url("/home/elliot/.config/wlogout/icons/logout.png"));
+}
+
+#logout:hover {
+    background-image: image(url("/home/elliot/.config/wlogout/icons/logout.png"));
+}
+
+#suspend {
+    background-image: image(url("/home/elliot/.config/wlogout/icons/sleep.png"));
+} 
+
+#shutdown {
+    background-image: image(url("/home/elliot/.config/wlogout/icons/power.png"));
+}
+
+#reboot {
+    background-image: image(url("/home/elliot/.config/wlogout/icons/restart.png"));
+}
+
+#hibernate {
+    background-image: image(url("/home/elliot/.config/wlogout/icons/hibernate.png"));
+}

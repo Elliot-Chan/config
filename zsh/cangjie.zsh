@@ -33,7 +33,7 @@ function cangjie::_run_in_subshell() {
             compiler)     cangjie::_build_compiler ;;
             runtime)      cangjie::_build_runtime ;;
             std)          cangjie::_build_std ;;
-            stdx)         cangjie::_build_stdx ;;
+            stdx)         cangjie::_build_stdx $2 ;;
             basic)        cangjie::_build_basic ;;
             tool_lsp)     cangjie::_build_tool_lsp ;;
             tool_cjpm)    cangjie::_build_tool_cjpm ;;
@@ -77,8 +77,7 @@ function cangjie::_build_compiler() {
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
     python3 build.py build -t ${build_type} ${AddOptsBuildpy} \
     && python3 build.py install --prefix ${install_dir} \
-    cjc -v || { echo "❌ Compiler verification failed"; return 1 }
-    echo "🎉 Install cjc to ${install_dir}"
+    && echo "🎉 Install cjc to ${install_dir}"
 }
 
 # 构建运行时 (子Shell中运行)
@@ -129,18 +128,23 @@ function cangjie::_build_stdx() {
       echo "cjc not found"
       ccj
     done
-
-    echo "🚀 Building Cangjie STDX Extension..."
-    cd ${WORKSPACE}/cangjie_stdx || return 1
-    
-
+    local package=$1
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
-    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
-    python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include \
-    && python3 build.py install --prefix ${install_dir}
+    if [[ -n "$package" ]]; then
+      cd ${WORKSPACE}/cangjie_stdx/build_temp/build || return 1
+      ninja cangjieCJNATIVE$package && ninja install
+    else
+      echo "🚀 Building Cangjie STDX Extension..."
+      cd ${WORKSPACE}/cangjie_stdx || return 1
+      [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
+      python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include && python3 build.py install --prefix ${install_dir} || return -1
+    fi
     
     echo "🎉 Install stdx to ${install_dir}/${kernel}_${cmake_arch}_cjnative/\{dynamic/static\}/stdx"
     set CANGJIE_STDX_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/\{dynamic/static\}/stdx
+    local modules_dir=${install_dir}/modules/linux_x86_64_cjnative/stdx/
+    cp -rf ${install_dir}/${kernel}_${cmake_arch}_cjnative/**/dynamic/**/**.{cjo,bc} $modules_dir
+    mv -f $modules_dir/{libstdx.bc,stdx.cjo} $modules_dir/../
 }
 
 # 构建工具集 (子Shell中运行)
@@ -426,5 +430,25 @@ function cjr() {
       fi
     done
   fi
+}
 
+function cjh {
+  eval set -- $(getopt -o bhf::l::o::w:: -- "$@")
+  local cjcArgs=("-g")
+  local needRun="true"
+  local filename="main.cj"
+  local libNames=()
+  local output="main"
+  
+  typeset -A warningDict
+  warningDict=(
+    ["c"]="-w"
+    ["cj"]="-Woff all"
+  )
+
+  typeset -A defaultDict
+  defaultDict=(
+    ["c"]=" "
+    ["cj"]="-g"
+  )
 }
