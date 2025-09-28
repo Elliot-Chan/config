@@ -14,6 +14,6 @@ function setProxy() {
 [ "$(tty)" = "/dev/tty1" ] && exec zsh -l -c sway
 
 if is_wsl; then
-   cd $HOME    
+  source wsl_custom.zsh
 fi
 

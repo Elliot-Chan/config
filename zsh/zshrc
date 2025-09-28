@@ -1,3 +1,10 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
@@ -71,7 +78,7 @@ ZSH_THEME="ys"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git sudo z common-aliases command-not-found alias-finder extract history fzf  zsh-interactive-cd)
+plugins=(git sudo z command-not-found alias-finder extract history fzf  zsh-interactive-cd)
 
 # User configuration
 
@@ -123,13 +130,16 @@ source $ZSH/oh-my-zsh.sh
 function arch() { return ""}
 
 
-source $HOME/config/zsh/helper.zsh
-source $HOME/config/zsh/utils.zsh
-source $HOME/config/zsh/cangjie.zsh
-source $HOME/config/zsh/custom.zsh
+source $HOME/.config/zsh/helper.zsh
+source $HOME/.config/zsh/utils.zsh
+source $HOME/.config/zsh/cangjie.zsh
+source $HOME/.config/zsh/custom.zsh
 
 setProxy
 fpath=($HOME/.zsh-complete $fpath)
 eval "$(sheldon source)"
 alias vim="nvim"
 alias yay="paru"
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh

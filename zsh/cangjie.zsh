@@ -32,7 +32,7 @@ function cangjie::_run_in_subshell() {
         case $task in
             compiler)     cangjie::_build_compiler ;;
             runtime)      cangjie::_build_runtime ;;
-            std)          cangjie::_build_std ;;
+            std)          cangjie::_build_std $2 ;;
             stdx)         cangjie::_build_stdx $2 ;;
             basic)        cangjie::_build_basic ;;
             tool_lsp)     cangjie::_build_tool_lsp ;;
@@ -67,10 +67,15 @@ function cangjie::_build_compiler() {
     [[ ${CANGJIE_CONFIG[build_compiler]} != "true" ]] && return
 
     echo "🚀 Building Cangjie Compiler..."
+
     cd ${WORKSPACE}/cangjie_compiler || return 1
-    mkdir -p build/build/utils_dep && cd build/build/utils_dep && ln -s $HOME/code/third_party_llvm-project || sleep 1
+    mkdir -p build/build/utils_dep && cd build/build/utils_dep && rm -rf third_party_llvm-project || sleep 1
+    ln -s $HOME/Code/CJ/third_party_llvm-project || sleep 1
+
     cd ${WORKSPACE}/cangjie_compiler || return 1
-    mkdir -p third_party && cd third_party && ln -s $HOME/code/llvm-project || sleep 1
+    mkdir -p third_party && cd third_party && rm -rf llvm-project
+    ln -s $HOME/Code/CJ/llvm-project || sleep 1
+
     cd ${WORKSPACE}/cangjie_compiler || return 1
     
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
@@ -99,7 +104,7 @@ function cangjie::_build_runtime() {
     cp -rf "${runtime_output_dir}"/{lib,runtime} "${install_dir}"
 }
 
-# 构建标准库 (子Shell中运行)
+# 构建标准库 (子Shell中运行) 
 function cangjie::_build_std() {
     [[ ${CANGJIE_CONFIG[build_std]} != "true" ]] && return
 
@@ -130,21 +135,22 @@ function cangjie::_build_stdx() {
     done
     local package=$1
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
+    local modules_dir=${install_dir}/modules/linux_x86_64_cjnative/stdx
     if [[ -n "$package" ]]; then
       cd ${WORKSPACE}/cangjie_stdx/build_temp/build || return 1
-      ninja cangjieCJNATIVE$package && ninja install
+      ninja $package && ninja install 
     else
       echo "🚀 Building Cangjie STDX Extension..."
       cd ${WORKSPACE}/cangjie_stdx || return 1
       [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
       python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include && python3 build.py install --prefix ${install_dir} || return -1
+      echo "🎉 Install stdx to ${install_dir}/${kernel}_${cmake_arch}_cjnative/{dynamic/static}/stdx"
+      cp -rf ${install_dir}/${kernel}_${cmake_arch}_cjnative/**/dynamic/**/**.{cjo,bc} $modules_dir
+      mv -f $modules_dir/{libstdx.bc,stdx.cjo} $modules_dir/../
     fi
-    
-    echo "🎉 Install stdx to ${install_dir}/${kernel}_${cmake_arch}_cjnative/\{dynamic/static\}/stdx"
+    set CANGJIE_STDX_DYNAMIC_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/dynamic/stdx
+    set CANGJIE_STDX_DYNAMIC_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/static/stdx
     set CANGJIE_STDX_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/\{dynamic/static\}/stdx
-    local modules_dir=${install_dir}/modules/linux_x86_64_cjnative/stdx/
-    cp -rf ${install_dir}/${kernel}_${cmake_arch}_cjnative/**/dynamic/**/**.{cjo,bc} $modules_dir
-    mv -f $modules_dir/{libstdx.bc,stdx.cjo} $modules_dir/../
 }
 
 # 构建工具集 (子Shell中运行)
@@ -226,6 +232,7 @@ function cangjie::_build_tools() {
 # 公开构建命令（主Shell接口）
 function cangjie::build() {
     local target=$1
+    shift 1
     if [[ -z "$target" ]]; then
         cangjie::build_all
         return
@@ -235,9 +242,9 @@ function cangjie::build() {
         all)      cangjie::build_all ;;
         compiler) cangjie::_run_in_subshell compiler ;;
         runtime)  cangjie::_run_in_subshell runtime ;;
-        std)      cangjie::_run_in_subshell std ;;
-        stdx)     cangjie::_run_in_subshell stdx ;;
-	lsp)	  cangjie::_run_in_subshell tool_lsp ;;
+        std)      cangjie::_run_in_subshell std $@ ;;
+        stdx)     cangjie::_run_in_subshell stdx $@ ;;
+	      lsp)	  cangjie::_run_in_subshell tool_lsp ;;
         tools)    cangjie::_run_in_subshell tools ;;
         *)
             echo "Available build targets:"
@@ -451,4 +458,28 @@ function cjh {
     ["c"]=" "
     ["cj"]="-g"
   )
+
+  local stdxOption="-lstdx.encoding.json \
+  -lstdx.serialization.serialization \
+  -lstdx.serialization \
+  -lstdx.net.http \
+  -lstdx.net.tls \
+  -lstdx.net.tls.common \
+  -lstdx.net \
+  -lstdx.logger \
+  -lstdx.log \
+  -lstdx.encoding.url \
+  -lstdx.encoding.json.stream \
+  -lstdx.crypto.keys \
+  -lstdx.crypto.x509 \
+  -lstdx.encoding.hex \
+  -lstdx.encoding.base64 \
+  -lstdx.encoding \
+  -lstdx.crypto.common \
+  -lstdx.crypto.crypto \
+  -lstdx.crypto.digest \
+  -lstdx.crypto \
+  -lstdx.compress.zlib \
+  -lstdx.compress \
+  -lstdx"
 }

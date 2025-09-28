@@ -2,6 +2,8 @@ local wezterm = require('wezterm')
 local platform = require('utils.platform')
 local act = wezterm.action
 
+local background = require('utils.background')
+
 local mod = {}
 
 if platform.is_mac then
@@ -25,7 +27,7 @@ local keys = {
       action = act.ShowLauncherArgs({ flags = 'FUZZY|WORKSPACES' }),
    },
    { key = 'F11', mods = 'NONE',    action = act.ToggleFullScreen },
-   { key = 'F12', mods = 'NONE',    action = act.ShowDebugOverlay },
+   { key = 'F11', mods = mod.SUPER,    action = act.ShowDebugOverlay },
    { key = 'f',   mods = mod.SUPER, action = act.Search({ CaseInSensitiveString = '' }) },
    {
       key = 'u',
@@ -162,6 +164,10 @@ local keys = {
          timemout_miliseconds = 1000,
       }),
    },
+   { key = 'k', mods = mod.SUPER_REV, action = wezterm.action_callback(function (window, _pane)
+      wezterm.log_info("abc")
+      background:set(window)
+   end) },
 }
 
 -- stylua: ignore

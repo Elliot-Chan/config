@@ -51,6 +51,9 @@ github = "wting/autojump"
 dir = "bin"
 apply = ["PATH", "source"]
 
+[plugins.powerlevel10k]
+github = "romkatv/powerlevel10k"
+
 # For example:
 #
 # [plugins.base16]

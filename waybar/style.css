@@ -1,0 +1,145 @@
+@import "mocha.css";
+
+* {
+  font-family: FantasqueSansMono Nerd Font;
+  font-size: 17px;
+  min-height: 0;
+}
+
+#waybar {
+  background: transparent;
+  color: @text;
+  margin: 5px 5px;
+}
+
+#workspaces {
+  border-radius: 1rem;
+  margin: 0.5rem;
+  background-color: @surface0;
+  margin-left: 1rem;
+}
+
+#workspaces button {
+  color: @lavender;
+  border-radius: 1rem;
+  margin: 0rem 0.5rem;
+  padding: 0.4rem;
+}
+
+#workspaces button.focused{
+  color: @sky;
+  border-radius: 0.2rem;
+}
+
+#workspaces button.urgent{
+  color: @red
+}
+
+#workspaces button:hover {
+  color: @sapphire;
+  border-radius: 0.5rem;
+  padding: 0rem 1rem;
+}
+
+#custom-music,
+#backlight,
+#clock,
+#battery,
+#pulseaudio,
+#custom-lock,
+#custom-clock,
+#custom-power {
+  background-color: @surface1;
+  padding: 0.2rem 1rem;
+  margin: -0.3rem;
+}
+
+#clock {
+  color: @blue;
+  border-radius: 0px 1rem 1rem 0px;
+  margin-right: 1rem;
+}
+
+
+#custom-clock {
+  color: @blue;
+  border-radius: 1rem 1rem 1rem 1rem;
+  margin-right: 1rem;
+}
+
+#battery {
+  color: @green;
+}
+
+#battery.charging {
+  color: @green;
+}
+
+#battery.warning:not(.charging) {
+  color: @red;
+}
+
+
+#backlight, #battery {
+    border-radius: 0;
+}
+
+#cpu {
+  border-radius: 1rem 0px 0px 1rem;
+  margin-right: 0.5rem;
+  color: @green
+}
+
+#memory.info {
+  color: @green;
+}
+
+#cpu.warning, #memory.warning {
+  color: #f1c40f;
+}
+
+/* usage >= 80% */
+#cpu.critical, #memory.critical {
+  color: #e74c3c;
+}
+
+#pulseaudio {
+  color: @maroon;
+  border-radius: 1rem 0px 0px 1rem;
+  margin-left: 1rem;
+}
+
+#custom-music {
+  color: @mauve;
+  border-radius: 1rem;
+}
+
+#custom-lock {
+    border-radius: 1rem 0px 0px 1rem;
+    color: @lavender;
+}
+
+#custom-notification{
+  color: @blue;
+  border-radius: 1rem 0px 0px 1rem;
+  margin-right: 1rem;
+}
+
+#custom-power {
+    background-color: @surface0;
+    margin-right: 0rem;
+    border-radius: 0px 1rem 1rem 0px;
+    color: @red;
+}
+#custom-updates {
+  background-color: @surface0;
+  padding: 0.5rem 1rem;
+  margin: -0.5rem;
+  border-radius: 0rem 1rem 1rem 0rem;
+}
+
+#tray {
+  background-color: @surface0;
+  padding: 0.2rem 1rem;
+  border-radius: 1rem 0rem 0rem 1rem;
+}

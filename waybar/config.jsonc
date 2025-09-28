@@ -1,0 +1,526 @@
+// -*- mode: jsonc -*-
+[
+  {
+    // "layer": "top", // Waybar at top layer
+    // "position": "bottom", // Waybar position (top|bottom|left|right)
+    "height": 30, // Waybar height (to be removed for auto height)
+    // "width": 1280, // Waybar width
+    "spacing": 4, // Gaps between modules (4px)
+    // Choose the order of the modules
+    "output": "HDMI-A-2",
+    "modules-left": [
+      "sway/workspaces",
+      "sway/mode",
+      "sway/scratchpad",
+      "custom/media"
+    ],
+    "modules-center": [
+      "sway/window"
+    ],
+    "modules-right": [
+      "mpd",
+      // "idle_inhibitor",
+      "custom/weather",
+      "custom/network_speed",
+      //"power-profiles-daemon",
+      // "pulseaudio",
+      "cpu",
+      "memory",
+      // "temperature",
+      //"backlight",
+      //"keyboard-state",
+      //"sway/language",
+      //"battery",
+      //"battery#bat2",
+      "custom/notification",
+      "clock",
+      "tray",
+      "custom/updates",
+      "custom/power"
+    ],
+    // Modules configuration
+    "sway/window": {
+      "format": "{title}",
+      "icon": false,
+      "rewrite": {
+        "(.*) - Visual Studio Code": "  $1",
+        "(.*) - Google Chrome": "  $1",
+        "(.*) - nvim": "  $1",
+        "WEZTERM_DIR(.*)": "📂 $1"
+      }
+    },
+    "sway/workspaces": {
+      "disable-scroll": true,
+      "all-outputs": true,
+      "warp-on-scroll": false,
+      "format": "{name}: {icon}",
+      "format-icons": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": "",
+        "urgent": "",
+        "focused": "",
+        "default": ""
+      }
+    },
+    "keyboard-state": {
+      "numlock": true,
+      "capslock": true,
+      "format": "{name} {icon}",
+      "format-icons": {
+        "locked": "",
+        "unlocked": ""
+      }
+    },
+    "sway/mode": {
+      "format": "<span style=\"italic\">{}</span>"
+    },
+    "sway/scratchpad": {
+      "format": "{icon}   {count}",
+      "show-empty": false,
+      "format-icons": [
+        "",
+        ""
+      ],
+      "tooltip": true,
+      "tooltip-format": "{app}: {title}"
+    },
+    "mpd": {
+      "format": "{stateIcon} {consumeIcon}{randomIcon}{repeatIcon}{singleIcon}{artist} - {album} - {title} ({elapsedTime:%M:%S}/{totalTime:%M:%S}) ⸨{songPosition}|{queueLength}⸩ {volume}% ",
+      "format-disconnected": "Disconnected ",
+      "format-stopped": "{consumeIcon}{randomIcon}{repeatIcon}{singleIcon}Stopped ",
+      "unknown-tag": "N/A",
+      "interval": 5,
+      "consume-icons": {
+        "on": " "
+      },
+      "random-icons": {
+        "off": "<span color=\"#f53c3c\"></span> ",
+        "on": " "
+      },
+      "repeat-icons": {
+        "on": " "
+      },
+      "single-icons": {
+        "on": "1 "
+      },
+      "state-icons": {
+        "paused": "",
+        "playing": ""
+      },
+      "tooltip-format": "MPD (connected)",
+      "tooltip-format-disconnected": "MPD (disconnected)"
+    },
+    "idle_inhibitor": {
+      "format": "{icon}",
+      "format-icons": {
+        "activated": "",
+        "deactivated": ""
+      }
+    },
+    "tray": {
+      // "icon-size": 21,
+      "spacing": 10
+      // "icons": {
+      //   "blueman": "bluetooth",
+      //   "TelegramDesktop": "$HOME/.local/share/icons/hicolor/16x16/apps/telegram.png"
+      // }
+    },
+    "clock": {
+      // "timezone": "America/New_York",
+      "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+      "format-alt": "{:%Y-%m-%d}"
+    },
+    "custom/updates": {
+      "format": "{} {icon} ",
+      "return-type": "json",
+      "format-icons": {
+        "has-updates": "󱍷",
+        "updated": "󰂪"
+      },
+      "exec-if": "which waybar-module-pacman-updates",
+      "exec": "waybar-module-pacman-updates --interval-seconds 5 --network-interval-seconds 300"
+    },
+    "custom/weather": {
+      "interval": 3600,
+      "format": "{} ",
+      "format-alt": "{}",
+      "exec": "python ~/.config/waybar/scripts/weather.py",
+      "max-length": 100,
+      "tooltip": true,
+      "return-type": "json"
+    },
+    "cpu": {
+      "format": "  {usage}%",
+      "tooltip": false,
+      "states": {
+        "warning": 50,
+        "critical": 80
+      }
+    },
+    "memory": {
+      "format": "  {}% ",
+      "states": {
+        "info": 20,
+        "warning": 50,
+        "critical": 80
+      }
+    },
+    "temperature": {
+      // "thermal-zone": 2,
+      // "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
+      "critical-threshold": 80,
+      // "format-critical": "{temperatureC}°C {icon}",
+      "format": "{icon} {temperatureC}°C",
+      "format-icons": [
+        "",
+        "",
+        ""
+      ]
+    },
+    "backlight": {
+      // "device": "acpi_video1",
+      "format": "{percent}% {icon}",
+      "format-icons": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    "battery": {
+      "states": {
+        // "good": 95,
+        "warning": 30,
+        "critical": 15
+      },
+      "format": "{capacity}% {icon}",
+      "format-full": "{capacity}% {icon}",
+      "format-charging": "{capacity}% ",
+      "format-plugged": "{capacity}% ",
+      "format-alt": "{time} {icon}",
+      // "format-good": "", // An empty format will hide the module
+      // "format-full": "",
+      "format-icons": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    "battery#bat2": {
+      "bat": "BAT2"
+    },
+    "power-profiles-daemon": {
+      "format": "{icon}",
+      "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+      "tooltip": true,
+      "format-icons": {
+        "default": "",
+        "performance": "",
+        "balanced": "",
+        "power-saver": ""
+      }
+    },
+    "network": {
+      "interface": "wlan0",
+      "output": "HDMI-A-2",
+      "format-wifi": "    ({signalStrength}%)   {bandwidthUpBytes}   {bandwidthDownBytes} ",
+      "format-ethernet": "  {bandwidthUpBytes}   {bandwidthDownBytes} ",
+      "format-linked": "(No IP) ",
+      "format": "",
+      "format-disconnected": "",
+      "format-alt": "{essid} {ipaddr}/{cidr}",
+      "on-click": "wl-copy $(ip address show up scope global | grep inet | head -n1 | cut -d/ -f 1 | tr -d [:space:] | cut -c5-)",
+      "on-click-right": "wl-copy $(ip address show up scope global | grep inet6 | head -n1 | cut -d/ -f 1 | tr -d [:space:] | cut -c6-)",
+      "tooltip-format": " {bandwidthUpBytes}  {bandwidthDownBytes}\n{ifname}\n{ipaddr}/{cidr}\n",
+      "tooltip-format-wifi": " {essid} {frequency}MHz\nStrength: {signaldBm}dBm ({signalStrength}%)\nIP: {ipaddr}/{cidr}\n {bandwidthUpBytes}  {bandwidthDownBytes}",
+      "interval": 1,
+      "states": {
+        "warning": 5000000, // 上传或下载超过 5MB/s 就算 warning
+        "critical": 10000000 // 超过 10MB/s 就算 critical
+      }
+    },
+    "pulseaudio": {
+      // "scroll-step": 1, // %, can be a float
+      "format": "{volume}% {icon} {format_source}",
+      "format-bluetooth": "{volume}% {icon} {format_source}",
+      "format-bluetooth-muted": " {icon} {format_source}",
+      "format-muted": " {format_source}",
+      "format-source": "{volume}% ",
+      "format-source-muted": "",
+      "format-icons": {
+        "headphone": "",
+        "hands-free": "",
+        "headset": "",
+        "phone": "",
+        "portable": "",
+        "car": "",
+        "default": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "on-click": "pavucontrol"
+    },
+    "custom/network_speed": {
+      "tooltip": true,
+      "exec": "~/.config/waybar/scripts/network_speed.sh",
+      "interval": 1,
+      "format": "{}",
+      "format-alt": "{}",
+      "on-click": "wl-copy $(ip -4 addr show up scope global | grep inet | head -n1 | awk '{print $2}' | cut -d/ -f1)",
+      "return-type": "json"
+    },
+    "custom/media": {
+      "format": "{icon} {text}",
+      "return-type": "json",
+      "max-length": 40,
+      "format-icons": {
+        "spotify": "",
+        "default": "🎜"
+      },
+      "escape": true,
+      "exec": "$HOME/.config/waybar/mediaplayer.py 2> /dev/null" // Script in resources folder
+      // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+    },
+    "custom/power": {
+      "format": "",
+      "tooltip": false,
+      "on-click": "wlogout -C ~/.config/wlogout/style.css -l  ~/.config/wlogout/layout.json  -b 6 --protocol layer-shell",
+    },
+    "custom/notification": {
+      "tooltip": false,
+      "format": "{icon}",
+      "format-icons": {
+        "notification": "<span foreground='red'><sup></sup></span>",
+        "none": "",
+        "dnd-notification": "<span foreground='red'><sup></sup></span>",
+        "dnd-none": "",
+        "inhibited-notification": "<span foreground='red'><sup></sup></span>",
+        "inhibited-none": "",
+        "dnd-inhibited-notification": "<span foreground='red'><sup></sup></span>",
+        "dnd-inhibited-none": ""
+      },
+      "return-type": "json",
+      "exec-if": "which swaync-client",
+      "exec": "swaync-client -swb",
+      "on-click": "swaync-client -t -sw",
+      "on-click-right": "swaync-client -d -sw",
+      "escape": true
+    }
+  },
+  {
+    "height": 30,
+    "spacing": 4,
+    "output": "HDMI-A-3",
+    "modules-left": [
+      "sway/mode",
+      "sway/scratchpad"
+    ],
+    "sway/scratchpad": {
+      "format": "{icon}   {count}",
+      "show-empty": false,
+      "format-icons": [
+        "",
+        ""
+      ],
+      "tooltip": true,
+      "tooltip-format": "{app}: {title}"
+    },
+    "sway/workspaces": {
+      "disable-scroll": true,
+      "all-outputs": true,
+      "warp-on-scroll": false,
+      "format": "{name}: {icon}",
+      "format-icons": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": "",
+        "urgent": "",
+        "focused": "",
+        "default": ""
+      }
+    },
+    "sway/mode": {
+      "format": "<span style=\"italic\">{}</span>"
+    },
+    "modules-center": [
+      "sway/window"
+    ],
+    "modules-right": [],
+    // "tray"
+    // "custom/weather"
+    // "cpu",
+    // "custom/notification",
+    // "custom/clock"
+    //],
+    "custom/clock": {
+      "exec": "date +%T",
+      "interval": 1,
+      "format": "{}",
+      "format-alt": "{}"
+    },
+    "custom/weather": {
+      "interval": 3600,
+      "format": "{} ",
+      "format-alt": "{}",
+      "exec": "python ~/.config/waybar/scripts/weather.py",
+      "max-length": 100,
+      "tooltip": true,
+      "return-type": "json"
+    },
+    "cpu": {
+      "format": "  {usage}%",
+      "tooltip": false
+    },
+    "custom/notification": {
+      "tooltip": false,
+      "format": "{icon}",
+      "format-icons": {
+        "notification": "<span foreground='red'><sup></sup></span>",
+        "none": "",
+        "dnd-notification": "<span foreground='red'><sup></sup></span>",
+        "dnd-none": "",
+        "inhibited-notification": "<span foreground='red'><sup></sup></span>",
+        "inhibited-none": "",
+        "dnd-inhibited-notification": "<span foreground='red'><sup></sup></span>",
+        "dnd-inhibited-none": ""
+      },
+      "return-type": "json",
+      "exec-if": "which swaync-client",
+      "exec": "swaync-client -swb",
+      "on-click": "swaync-client -t -sw",
+      "on-click-right": "swaync-client -d -sw",
+      "escape": true
+    },
+    "tray": {
+      // "icon-size": 21,
+      "spacing": 10
+      // "icons": {
+      //   "blueman": "bluetooth",
+      //   "TelegramDesktop": "$HOME/.local/share/icons/hicolor/16x16/apps/telegram.png"
+      // }
+    },
+    "custom/network_speed": {
+      "tooltip": true,
+      "exec": "~/.config/waybar/scripts/network_speed.sh",
+      "interval": 1,
+      "format": "{}",
+      "return-type": "json"
+    }
+  },
+  {
+    "height": 30,
+    "spacing": 4,
+    "output": "HDMI-A-3",
+    "position": "bottom",
+    "modules-left": [
+      "sway/workspaces",
+      "sway/scratchpad"
+    ],
+    "sway/scratchpad": {
+      "format": "{icon}   {count}",
+      "show-empty": false,
+      "format-icons": [
+        "",
+        ""
+      ],
+      "tooltip": true,
+      "tooltip-format": "{app}: {title}"
+    },
+    "sway/workspaces": {
+      "disable-scroll": true,
+      "all-outputs": true,
+      "warp-on-scroll": false,
+      "format": "{name}: {icon}",
+      "format-icons": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": "",
+        "urgent": "",
+        "focused": "",
+        "default": ""
+      }
+    },
+    "sway/mode": {
+      "format": "<span style=\"italic\">{}</span>"
+    },
+    "modules-center": [
+      "sway/window"
+    ],
+    "modules-right": [
+      "custom/weather",
+      "cpu",
+      "custom/notification",
+      "custom/clock"
+    ],
+    "custom/clock": {
+      "exec": "date +%T",
+      "interval": 1,
+      "format": "{}",
+      "format-alt": "{}"
+    },
+    "custom/weather": {
+      "interval": 3600,
+      "format": "{} ",
+      "format-alt": "{}",
+      "exec": "python ~/.config/waybar/scripts/weather.py",
+      "max-length": 100,
+      "tooltip": true,
+      "return-type": "json"
+    },
+    "cpu": {
+      "format": "  {usage}%",
+      "tooltip": false
+    },
+    "custom/notification": {
+      "tooltip": false,
+      "format": "{icon}",
+      "format-icons": {
+        "notification": "<span foreground='red'><sup></sup></span>",
+        "none": "",
+        "dnd-notification": "<span foreground='red'><sup></sup></span>",
+        "dnd-none": "",
+        "inhibited-notification": "<span foreground='red'><sup></sup></span>",
+        "inhibited-none": "",
+        "dnd-inhibited-notification": "<span foreground='red'><sup></sup></span>",
+        "dnd-inhibited-none": ""
+      },
+      "return-type": "json",
+      "exec-if": "which swaync-client",
+      "exec": "swaync-client -swb",
+      "on-click": "swaync-client -t -sw",
+      "on-click-right": "swaync-client -d -sw",
+      "escape": true
+    },
+    "tray": {
+      // "icon-size": 21,
+      "spacing": 10
+      // "icons": {
+      //   "blueman": "bluetooth",
+      //   "TelegramDesktop": "$HOME/.local/share/icons/hicolor/16x16/apps/telegram.png"
+      // }
+    },
+    "custom/network_speed": {
+      "tooltip": true,
+      "exec": "~/.config/waybar/scripts/network_speed.sh",
+      "interval": 1,
+      "format": "{}",
+      "return-type": "json"
+    }
+  }
+]

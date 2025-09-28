@@ -12,6 +12,21 @@ function Config:init()
    return config
 end
 
+
+wezterm.on("format-window-title", function(tab, pane, tabs, panes, config)
+  local title = tab.active_pane.title
+  if string.match(title, "nvim") then
+    return title
+  else
+    local cwd = tab.active_pane.current_working_dir
+    if cwd then
+      return wezterm.format({
+        { Text = "WEZTERM_DIR" .. cwd.file_path }, -- 完整路径
+      })
+    end
+  end
+end)
+
 ---Append to `Config.options`
 ---@param new_options table new options to append
 ---@return Config
