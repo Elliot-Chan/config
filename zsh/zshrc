@@ -1,3 +1,5 @@
+autoload -U colors && colors
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -78,7 +80,7 @@ ZSH_THEME="ys"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git sudo z command-not-found alias-finder extract history fzf  zsh-interactive-cd)
+plugins=(git sudo z command-not-found alias-finder extract history fzf zsh-interactive-cd)
 
 # User configuration
 
@@ -146,10 +148,3 @@ alias yay="paru"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-[[ -s /home/elliot/.cjman/cjman ]] && source /home/elliot/.cjman/cjman
-
-alias fixPcre="cp /usr/lib/libpcre2-8.so.0 /home/elliot/cangjie_sdk/cangjie/runtime/lib/linux_x86_64_cjnative/libpcre2-8.so.0"
-
-export GC_OWNER=MinamiK
-export GC_REPO=clipboard
-

@@ -38,8 +38,8 @@ github = "olivierverdier/zsh-git-prompt"
 [plugins.git-open]
 github = "paulirish/git-open"
 
-[plugins.you-should-use]
-github = "MichaelAquilina/zsh-you-should-use"
+#[plugins.you-should-use]
+#github = "MichaelAquilina/zsh-you-should-use"
 
 [plugins.autopair]
 github = "hlissner/zsh-autopair"
@@ -56,7 +56,18 @@ github = "romkatv/powerlevel10k"
 
 [plugins.codex]
 github = "tom-doerr/zsh_codex"
+
+[plugins.vi]
+github = "jeffreytse/zsh-vi-mode"
+
+[plugins.direnv]
+github = "ptavares/zsh-direnv"
+
+[plugins.colored_man]
+github = "ael-code/zsh-colored-man-pages"
+
 # For example:
 #
 # [plugins.base16]
 # github = "chriskempson/base16-shell"
+#
