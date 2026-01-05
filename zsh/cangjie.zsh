@@ -60,6 +60,8 @@ function cangjie::_init() {
     export RPATH=${CANGJIE_CONFIG[set_rpath]:+"--set-rpath \$RPATH"}
     export PATH=${CANGJIE_CONFIG[compiler_path]}:$PATH
     export cangjie_sdk_path=${CANGJIE_CONFIG[output]}
+    export CC="ccache clang"
+    export CXX="ccache clang++"
 }
 
 # 构建编译器 (子Shell中运行)
@@ -83,9 +85,9 @@ function cangjie::_build_compiler() {
     cd ${WORKSPACE}/cangjie_compiler || return 1
     
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
-    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3.11 build.py clean
-    python3.11 build.py build -t ${build_type} ${AddOptsBuildpy} --no-tests \
-    && python3.11 build.py install --prefix ${install_dir} \
+    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
+    python3 build.py build -t ${build_type} ${AddOptsBuildpy} --no-tests --jobs 14 \
+    && python3 build.py install --prefix ${install_dir} \
     && echo "🎉 Install cjc to ${install_dir}"
 }
 
@@ -112,18 +114,18 @@ function cangjie::_build_runtime() {
 function cangjie::_build_std() {
     [[ ${CANGJIE_CONFIG[build_std]} != "true" ]] && return
 
-    while [[ -z $(command -v cjc) ]]; do
-      echo "cjc not found"
-      ccj
-    done
+    if [[ -z $(command -v cjc) ]]; then
+      ERROR "cjc not found"
+      source /home/elliot/cangjie_sdk/linux_relwithdebinfo_x86_64/envsetup.sh
+    fi
 
     echo "🚀 Building Cangjie Standard Library..."
     cd ${WORKSPACE}/cangjie_runtime/stdlib || return 1
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
-    python3 build.py build -j 12 -t ${build_type} --target-lib ${WORKSPACE}/cangjie_runtime/runtime/output/ --build-args="-Woff=all" && python3 build.py install
+    invoke_exec "python3 build.py build -j 12 -t ${build_type} --target-lib ${WORKSPACE}/cangjie_runtime/runtime/output/ --build-args='-Woff=all' && python3 build.py install"
 
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
-    cp -rf ${WORKSPACE}/cangjie_runtime/stdlib/output/* ${install_dir}
+    invoke_exec "cp -rf ${WORKSPACE}/cangjie_runtime/stdlib/output/* ${install_dir}"
     echo "🎉 Install std to ${install_dir}"
 }
 
@@ -131,10 +133,10 @@ function cangjie::_build_std() {
 function cangjie::_build_stdx() {
     [[ ${CANGJIE_CONFIG[build_stdx]} != "true" ]] && return
 
-    while [[ -z $(command -v cjc) ]]; do
-      echo "cjc not found"
-      ccj
-    done
+    if [[ -z $(command -v cjc) ]]; then
+      ERROR "cjc not found"
+      source /home/elliot/cangjie_sdk/linux_relwithdebinfo_x86_64/envsetup.sh
+    fi
     local package=$1
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     local modules_dir=${install_dir}/modules/linux_x86_64_cjnative/stdx
@@ -145,10 +147,10 @@ function cangjie::_build_stdx() {
       echo "🚀 Building Cangjie STDX Extension..."
       cd ${WORKSPACE}/cangjie_stdx || return 1
       [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
-      python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include && python3 build.py install --prefix ${install_dir} || return -1
+      invoke_exec "python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include && python3 build.py install --prefix ${install_dir}" || return -1
       echo "🎉 Install stdx to ${install_dir}/${kernel}_${cmake_arch}_cjnative/{dynamic/static}/stdx"
-      cp -rf ${install_dir}/${kernel}_${cmake_arch}_cjnative/**/dynamic/**/**.{cjo,bc} $modules_dir
-      mv -f $modules_dir/{libstdx.bc,stdx.cjo} $modules_dir/../
+      # cp -rf ${install_dir}/${kernel}_${cmake_arch}_cjnative/**/dynamic/**/**.{cjo,bc} $modules_dir
+      # mv -f $modules_dir/{libstdx.bc,stdx.cjo} $modules_dir/../
     fi
     set CANGJIE_STDX_DYNAMIC_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/dynamic/stdx
     set CANGJIE_STDX_DYNAMIC_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/static/stdx
@@ -445,48 +447,180 @@ function cjr() {
 }
 
 function cjh {
-  eval set -- $(getopt -o bhf::l::o::w:: -- "$@")
-  local cjcArgs=("-g")
-  local needRun="true"
+  emulate -L zsh
+  setopt pipefail
+  setopt no_unset
+
+  local -a libNames libDirs linkExtra runArgs
+  local needRun=true
   local filename="main.cj"
-  local libNames=()
   local output="main"
-  
-  typeset -A warningDict
-  warningDict=(
-    ["c"]="-w"
-    ["cj"]="-Woff all"
+  local lang="cj"
+  local useStdx=false
+  local keepWarnings=false   # -w: 不添加 -Woff all
+  local useStatic=false 
+
+  # stdx libs：保持你确认过的 cjc 写法
+  local -a stdxLibs=(
+    --link-option --start-group
+    -lstdx.encoding.json
+    -lstdx.serialization.serialization
+    -lstdx.serialization
+    -lstdx.net.http
+    -lstdx.net.tls
+    -lstdx.net.tls.common
+    -lstdx.net
+    -lstdx.logger
+    -lstdx.log
+    -lstdx.encoding.url
+    -lstdx.encoding.json.stream
+    -lstdx.crypto.keys
+    -lstdx.crypto.x509
+    -lstdx.encoding.hex
+    -lstdx.encoding.base64
+    -lstdx.encoding
+    -lstdx.crypto.common
+    -lstdx.crypto.crypto
+    -lstdx.crypto.digest
+    -lstdx.crypto
+    -lstdx.compress.zlib
+    -lstdx.compress
+    -lstdx
+    --link-option --end-group
   )
 
-  typeset -A defaultDict
-  defaultDict=(
-    ["c"]=" "
-    ["cj"]="-g"
-  )
+  local usage
+  usage=$'Usage: cjh [options] [file] [-- args...]\n\n'\
+$'Options:\n'\
+$'  -h                Show help\n'\
+$'  -b                Build only (do not run)\n'\
+$'  -x                Enable stdx profile: --import-path $CANGJIE_STDX_PATH -L $CANGJIE_STDX_PATH + stdx libs\n'\
+$'  -w                Keep warnings (do NOT add -Woff all)\n'\
+$'  -f <file>          Source file (default: main.cj)\n'\
+$'  -o <out>           Output name (default: main)\n'\
+$'  -l <name>          Extra library name (repeatable)\n'\
+$'  -L <dir>           Add library search dir (repeatable)\n'\
+$' -s                 enable `--static` option\n'\
+$'\nEnv:\n'\
+$'  CANGJIE_STDX_PATH: required when using -x\n'\
+$'  CJ_SDK_LIBPATH: extra runtime lib path injected into LD_LIBRARY_PATH when running\n'
 
-  local stdxOption="-lstdx.encoding.json \
-  -lstdx.serialization.serialization \
-  -lstdx.serialization \
-  -lstdx.net.http \
-  -lstdx.net.tls \
-  -lstdx.net.tls.common \
-  -lstdx.net \
-  -lstdx.logger \
-  -lstdx.log \
-  -lstdx.encoding.url \
-  -lstdx.encoding.json.stream \
-  -lstdx.crypto.keys \
-  -lstdx.crypto.x509 \
-  -lstdx.encoding.hex \
-  -lstdx.encoding.base64 \
-  -lstdx.encoding \
-  -lstdx.crypto.common \
-  -lstdx.crypto.crypto \
-  -lstdx.crypto.digest \
-  -lstdx.crypto \
-  -lstdx.compress.zlib \
-  -lstdx.compress \
-  -lstdx"
+  # --- parse args ---
+  local -a argv=("$@")
+  local i=1
+  while (( i <= $#argv )); do
+    case "${argv[i]}" in
+      -h) INFO "$usage"; return 0 ;;
+      -b) needRun=false ;;
+      -x) useStdx=true ;;
+      -w) keepWarnings=true ;;
+      -s) useStatic=true ;;
+      -f) (( i++ )); filename="${argv[i]:-}" ;;
+      -o) (( i++ )); output="${argv[i]:-}" ;;
+      -l) (( i++ )); libNames+=("${argv[i]:-}") ;;
+      -L) (( i++ )); libDirs+=("${argv[i]:-}") ;;
+      --)
+        runArgs=("${argv[@]:i+1}")
+        break
+        ;;
+      -*)
+        linkExtra+=("${argv[i]}")
+        ;;
+      *)
+        if [[ -f "${argv[i]}" ]]; then
+          filename="${argv[i]}"
+        else
+          runArgs+=("${argv[i]}")
+        fi
+        ;;
+    esac
+    (( i++ ))
+  done
+
+  case "$filename" in
+    *.cj) lang="cj" ;;
+    *.c)  lang="c"  ;;
+    *)    lang="cj" ;;
+  esac
+
+  # --- build ---
+  if [[ "$lang" == "cj" ]]; then
+    local -a cmd=(cjc)
+
+    # 基础参数
+    cmd+=(-g --error-count-limit all)
+    if [[ "$keepWarnings" != true ]]; then
+      cmd+=(-Woff all)
+    fi
+
+    if [[ "$useStatic" == true ]]; then
+      cmd+=(--static)
+    fi
+
+    # 用户自定义 -L
+    for d in "${libDirs[@]}"; do
+      cmd+=(-L "$d")
+    done
+
+    # stdx profile：--import-path + -L + libs
+    if [[ "$useStdx" == true ]]; then
+      if [[ -z "${CANGJIE_STDX_PATH:-}" ]]; then
+        ERROR "[cjh] -x 需要先设置 CANGJIE_STDX_PATH"
+        return 2
+      fi
+      cmd+=(--import-path "$CANGJIE_STDX_PATH" -L "$CANGJIE_STDX_PATH")
+      cmd+=("${stdxLibs[@]}")
+    fi
+
+    # 额外 -l
+    for n in "${libNames[@]}"; do
+      [[ "$n" == -l* ]] && cmd+=("$n") || cmd+=("-l$n")
+    done
+
+    # 透传选项
+    cmd+=("${linkExtra[@]}")
+    cmd+=("$filename" -o "$output")
+
+    INFO "[cjh] ${cmd[*]}"
+    if ! "${cmd[@]}"; then
+      ERROR "[cjh] 编译失败：$filename"
+      return 1
+    fi
+    SUCCESS "[cjh] 编译成功：./$output"
+  else
+    local CC=${CC:-gcc}
+    local -a cmd=("$CC" -g)
+
+    for d in "${libDirs[@]}"; do cmd+=(-L "$d"); done
+    for n in "${libNames[@]}"; do [[ "$n" == -l* ]] && cmd+=("$n") || cmd+=("-l$n"); done
+    cmd+=("${linkExtra[@]}")
+    cmd+=("$filename" -o "$output")
+
+    INFO "[cjh] ${cmd[*]}"
+    if ! "${cmd[@]}"; then
+      ERROR "[cjh] 编译失败：$filename"
+      return 1
+    fi
+    SUCCESS "[cjh] 编译成功：./$output"
+  fi
+
+  # --- run ---
+  if [[ "$needRun" == true ]]; then
+    local bin="./$output"
+    if [[ ! -x "$bin" ]]; then
+      ERROR "[cjh] 输出不可执行：$bin"
+      return 3
+    fi
+
+    local old_ld="${LD_LIBRARY_PATH:-}"
+    if [[ -n "${CJ_SDK_LIBPATH:-}" ]]; then
+      export LD_LIBRARY_PATH="${CJ_SDK_LIBPATH}${old_ld:+:$old_ld}"
+      WARNING "[cjh] LD_LIBRARY_PATH 注入：$CJ_SDK_LIBPATH"
+    fi
+
+    INFO "[cjh] run: $bin ${runArgs[*]}"
+    "$bin" "${runArgs[@]}"
+  fi
 }
 
 function cangjie::_build_ninja {
@@ -508,10 +642,24 @@ function cangjie::_build_ninja {
       echo "Error: Directory build/build does not exist."
       exit 1
     fi
-    ninja cangjie-std-$1
+    ninja cangjieCJNATIVE$1
     python3 ${WORKSPACE}/cangjie_runtime/stdlib/build.py install
 
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     cp -rf ${WORKSPACE}/cangjie_runtime/stdlib/output/* ${install_dir}
     echo "🎉 Install std to ${install_dir}"
 }
+
+
+function cjcclip() {
+  local tmp out
+  tmp=$(mktemp --suffix=.cj /tmp/clip-XXXXXX) || return 1
+  out=${tmp%.cj}.out
+
+  wl-paste > "$tmp" || return 1
+  cjc -o "$out" "$tmp" || return $?
+  echo "[cjcclip] src: $tmp" >&2
+  echo "[cjcclip] out: $out" >&2
+  invoke_exec "$out"
+}
+

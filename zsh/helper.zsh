@@ -1,35 +1,14 @@
 # 彩色终端日志
 log_message() {
-    local message="$1"
-    local color="$2"
-    case "$color" in
-        "red") color_code="\033[31m" ;;
-        "green") color_code="\033[32m" ;;
-        "yellow") color_code="\033[33m" ;;
-        "blue") color_code="\033[34m" ;;
-        "magenta") color_code="\033[35m" ;;
-        "cyan") color_code="\033[36m" ;;
-        "white") color_code="\033[37m" ;;
-        *) color_code="\033[0m" ;;  # 默认颜色
-    esac
-    echo -e "${color_code}${message}\033[0m"
+  local message="$1"
+  local color="${2:-default}"
+  print -P -- "%F{$color}${message}%f"
 }
 
-ERROR() {
-    log_message "$1" "red"
-}
-
-WARNING() {
-    log_message "$1" "yellow"
-}
-
-INFO() {
-    log_message "$1" "cyan"
-}
-
-SUCCESS() {
-    log_message "$1" "green"
-}
+ERROR()   { log_message "$1" red; }
+WARNING() { log_message "$1" yellow; }
+INFO()    { log_message "$1" cyan; }
+SUCCESS() { log_message "$1" green; }
 
 invoke_exec() {
     local expr="$1"
@@ -193,6 +172,9 @@ ccj() {
         export CANGJIE_SDK_PATH=$selected_folder
         which cjc 2>/dev/null || echo "cjc 未在 PATH 中"
         cjc --version 2>/dev/null || echo "cjc --version 执行失败"
+        if [[ $param == "dynamic" && $CANGJIE_STDX_PATH ]]; then
+          export LD_LIBRARY_PATH=$CANGJIE_STDX_PATH:$LD_LIBRARY_PATH
+        fi
         local pcre2=( ${selected_folder}/**/libpcre2-*(.N) )
         for f in $pcre2; do 
           if [[ ${file:e} != so ]] ; then
@@ -210,3 +192,10 @@ ccj() {
         return 1
     fi
 }
+
+cdi() {  # cd-from-stdin
+  local dir
+  IFS= read -r dir || return 1
+  cd -- "$dir"
+}
+

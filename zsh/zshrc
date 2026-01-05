@@ -80,7 +80,7 @@ ZSH_THEME="ys"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git sudo z command-not-found alias-finder extract history fzf zsh-interactive-cd)
+plugins=(git sudo command-not-found alias-finder extract history fzf zsh-interactive-cd)
 
 # User configuration
 
@@ -136,15 +136,34 @@ source $HOME/.config/zsh/helper.zsh
 source $HOME/.config/zsh/utils.zsh
 source $HOME/.config/zsh/cangjie.zsh
 source $HOME/.config/zsh/alias.zsh
+source $HOME/.config/zsh/git.zsh
 source $HOME/.config/zsh/custom.zsh
 source $HOME/.custom.zsh
 source /usr/share/doc/git-extras/git-extras-completion.zsh
+
+zstyle ':completion:*:cd:*' ignore-parents true
+compdef -d cd
+export _ZO_FZF_OPTS="
+  --preview 'exa -al --tree --level 1 --group-directories-first --git-ignore --header --git --no-user --no-time --no-filesize --no-permissions {}'
+  --preview-window=right,50%
+"
+export FZF_ALT_C_OPTS="
+  --preview 'exa -al --tree --level 1 --group-directories-first --git-ignore --header --git --no-user --no-time --no-filesize --no-permissions {}'
+  --preview-window=right,50%
+"
+eval "$(zoxide init zsh)"
+alias zz='zi'
+
 
 setProxy
 fpath=($HOME/.zsh-complete $fpath)
 eval "$(sheldon source)"
 alias vim="nvim"
 alias yay="paru"
+alias fda='fd -I'
+alias fdu='fd -uu'
+
+alias gcai=git-commit-ai
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
