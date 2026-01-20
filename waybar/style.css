@@ -1,74 +1,231 @@
 @import "mocha.css";
 
+@define-color bar-bg rgba(30, 30, 46, 0.75);
+@define-color bar-border rgba(255, 255, 255, 0.06);
+@define-color module-bg rgba(49, 50, 68, 0.9);
+@define-color module-border rgba(255, 255, 255, 0.08);
+
 * {
   font-family: FantasqueSansMono Nerd Font;
-  font-size: 17px;
+  font-size: 16px;
   min-height: 0;
 }
 
 #waybar {
-  background: transparent;
+  background-color: @bar-bg;
   color: @text;
-  margin: 5px 5px;
+  margin: 6px 8px;
+  border-radius: 16px;
+  border: 1px solid @bar-border;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+#waybar .modules-left,
+#waybar .modules-center,
+#waybar .modules-right {
+  padding: 4px 6px;
 }
 
 #workspaces {
-  border-radius: 1rem;
-  margin: 0.5rem;
-  background-color: @surface0;
-  margin-left: 1rem;
+  background-color: @module-bg;
+  border: 1px solid @module-border;
+  border-radius: 12px;
+  padding: 2px 4px;
+  margin: 0 4px;
 }
 
 #workspaces button {
+  background-color: transparent;
   color: @lavender;
-  border-radius: 1rem;
-  margin: 0rem 0.5rem;
-  padding: 0.4rem;
+  border-radius: 10px;
+  margin: 0 4px;
+  padding: 0.25rem 0.6rem;
 }
 
-#workspaces button.focused{
+#workspaces button.focused {
+  background-color: @surface2;
   color: @sky;
-  border-radius: 0.2rem;
+  font-weight: 700;
 }
 
-#workspaces button.urgent{
-  color: @red
+#workspaces button.urgent {
+  background-color: rgba(243, 139, 168, 0.15);
+  color: @red;
 }
 
 #workspaces button:hover {
+  background-color: @surface1;
   color: @sapphire;
-  border-radius: 0.5rem;
-  padding: 0rem 1rem;
+}
+
+#window,
+#mode,
+#scratchpad,
+#mpd,
+#custom-media,
+#custom-music,
+#custom-weather,
+#custom-network_speed,
+#cpu,
+#memory,
+#backlight,
+#battery,
+#pulseaudio,
+#custom-notification,
+#custom-gcclip,
+#custom-lock,
+#clock,
+#custom-clock,
+#tray,
+#custom-updates,
+#custom-power,
+#idle_inhibitor {
+  background-color: @module-bg;
+  border: 1px solid @module-border;
+  padding: 0.25rem 0.8rem;
+  margin: 0 4px;
+  border-radius: 12px;
+}
+
+#window {
+  color: @text;
+  padding: 0.25rem 1rem;
+}
+
+#window.empty {
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  opacity: 0;
+}
+
+#window.empty label {
+  padding: 0;
+  margin: 0;
+}
+
+#custom-network_speed {
+  color: @sky;
+}
+
+#custom-weather {
+  color: @text;
+}
+
+#cpu {
+  color: @green;
+}
+
+#memory {
+  color: @teal;
+}
+
+#pulseaudio {
+  color: @maroon;
 }
 
 #custom-music,
-#backlight,
+#custom-media,
+#mpd {
+  color: @mauve;
+}
+
 #clock,
-#battery,
-#pulseaudio,
-#custom-lock,
-#custom-clock,
-#custom-power {
-  background-color: @surface1;
-  padding: 0.2rem 1rem;
-  margin: -0.3rem;
-}
-
-#clock {
-  color: @blue;
-  border-radius: 0px 1rem 1rem 0px;
-  margin-right: 1rem;
-}
-
-
 #custom-clock {
   color: @blue;
-  border-radius: 1rem 1rem 1rem 1rem;
-  margin-right: 1rem;
 }
 
-#battery {
-  color: @green;
+#custom-gcclip {
+  color: @teal;
+}
+
+#custom-notification {
+  color: @blue;
+}
+
+#custom-updates {
+  color: @yellow;
+}
+
+#custom-weather.weather-clear {
+  color: @yellow;
+}
+
+#custom-weather.weather-cloudy {
+  color: @lavender;
+}
+
+#custom-weather.weather-overcast {
+  color: @subtext1;
+}
+
+#custom-weather.weather-shower {
+  color: @sapphire;
+}
+
+#custom-weather.weather-rain {
+  color: @blue;
+}
+
+#custom-weather.weather-thunder {
+  color: @red;
+}
+
+#custom-weather.weather-hail,
+#custom-weather.weather-sleet {
+  color: @rosewater;
+}
+
+#custom-weather.weather-snow {
+  color: @rosewater;
+}
+
+#custom-weather.weather-fog {
+  color: @overlay1;
+}
+
+#custom-weather.weather-haze,
+#custom-weather.weather-dust,
+#custom-weather.weather-heat {
+  color: @peach;
+}
+
+#custom-weather.weather-cold {
+  color: @teal;
+}
+
+#custom-weather.weather-unknown {
+  color: @subtext1;
+}
+
+#custom-weather.weather-lvl-2 {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+#custom-weather.weather-lvl-3 {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+#custom-weather.weather-extreme {
+  border-color: @maroon;
+  box-shadow: 0 0 6px rgba(235, 160, 172, 0.4);
+}
+
+#custom-weather.temp-hot {
+  text-shadow: 0 0 6px rgba(250, 179, 135, 0.5);
+}
+
+#custom-weather.temp-cold {
+  text-shadow: 0 0 6px rgba(148, 226, 213, 0.5);
+}
+
+#custom-power {
+  background-color: @surface1;
+  color: @red;
+  padding: 0.25rem 0.9rem;
 }
 
 #battery.charging {
@@ -77,21 +234,6 @@
 
 #battery.warning:not(.charging) {
   color: @red;
-}
-
-
-#backlight, #battery {
-    border-radius: 0;
-}
-
-#cpu {
-  border-radius: 1rem 0px 0px 1rem;
-  margin-right: 0.5rem;
-  color: @green
-}
-
-#memory.info {
-  color: @green;
 }
 
 #cpu.warning, #memory.warning {
@@ -103,43 +245,14 @@
   color: #e74c3c;
 }
 
-#pulseaudio {
-  color: @maroon;
-  border-radius: 1rem 0px 0px 1rem;
-  margin-left: 1rem;
-}
-
-#custom-music {
-  color: @mauve;
-  border-radius: 1rem;
-}
-
-#custom-lock {
-    border-radius: 1rem 0px 0px 1rem;
-    color: @lavender;
-}
-
-#custom-notification{
-  color: @blue;
-  border-radius: 1rem 0px 0px 1rem;
-  margin-right: 1rem;
-}
-
-#custom-power {
-    background-color: @surface0;
-    margin-right: 0rem;
-    border-radius: 0px 1rem 1rem 0px;
-    color: @red;
-}
-#custom-updates {
+tooltip {
   background-color: @surface0;
-  padding: 0.5rem 1rem;
-  margin: -0.5rem;
-  border-radius: 0rem 1rem 1rem 0rem;
+  color: @text;
+  border-radius: 10px;
+  border: 1px solid @surface1;
+  padding: 0.5rem;
 }
 
-#tray {
-  background-color: @surface0;
-  padding: 0.2rem 1rem;
-  border-radius: 1rem 0rem 0rem 1rem;
+tooltip label {
+  font-size: 14px;
 }

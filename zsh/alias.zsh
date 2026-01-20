@@ -1,1 +1,1 @@
-alias cjpm=$HOME/cangjie_sdk/Daily/tools/bin/cjpm
+alias cjpm=$HOME/cangjie_sdk/Daily/cangjie/tools/bin/cjpm

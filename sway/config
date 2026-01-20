@@ -8,9 +8,16 @@ output HDMI-A-2 pos 1440 0 res 2560x1440@144Hz
 
 exec "systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE"
 exec swaymsg create_output
+#exec fcitx5-remote -r
 exec_always $HOME/config/sway/scripts/vncserver.sh
 output HEADLESS-1 mode 2560x1440@60Hz bg $HOME/Pictures/ly2.png fill
 workspace 10:VNC output HEADLESS-1
 
 include /etc/sway/config.d/*
 include $HOME/.config/sway/config.d/*
+
+workspace 1 output HDMI-A-2
+
+input * {
+    scroll_factor 1
+}

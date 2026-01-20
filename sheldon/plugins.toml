@@ -43,8 +43,8 @@ github = "paulirish/git-open"
 
 [plugins.autopair]
 github = "hlissner/zsh-autopair"
-[plugins.enhanced]
-github = "babarot/enhancd"
+# [plugins.enhanced]
+# github = "babarot/enhancd"
 
 [plugins.autojump]
 github = "wting/autojump"

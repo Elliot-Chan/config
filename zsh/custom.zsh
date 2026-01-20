@@ -3,17 +3,17 @@ export ENHANCD_FILTER="fzf --preview 'exa -al --tree --level 1 --group-directori
 export FZF_DEFAULT_OPTS='--height 75% --multi --reverse --margin=0,1 --bind ctrl-f:page-down,ctrl-b:page-up,ctrl-/:toggle-preview --bind pgdn:preview-page-down,pgup:preview-page-up --marker="✚" --pointer="▶" --prompt="❯ " --no-separator --scrollbar="█" --color bg+:#262626,fg+:#dadada,hl:#f09479,hl+:#f09479 --color border:#303030,info:#cfcfb0,header:#80a0ff,spinner:#36c692 --color prompt:#87afff,pointer:#ff5189,marker:#f09479'
 
 function setProxy() {
-        export http_proxy="http://127.0.0.1:7897"
-        export https_proxy=$http_proxy
-        export ftp_proxy=$http_proxy
-        export all_proxy=$http_proxy
-        export rsync_proxy=$http_proxy
-        export no_proxy="localhost,127.0.0.1,localaddress,.localdomain.com"
+  export http_proxy="http://127.0.0.1:7897"
+  export https_proxy=$http_proxy
+  export ftp_proxy=$http_proxy
+  export all_proxy=$http_proxy
+  export rsync_proxy=$http_proxy
+  export no_proxy="localhost,127.0.0.1,localaddress,.localdomain.com"
 }
 
-[ "$(tty)" = "/dev/tty1" ] && exec zsh -l -c sway
+[ "$(tty)" = "/dev/tty1" ] && exec bash -lc "$HOME/.local/bin/start-scroll"
+[ "$(tty)" = "/dev/tty2" ] && exec bash -lc "$HOME/.local/bin/start-sway"
 
 if is_wsl; then
   source wsl_custom.zsh
 fi
-

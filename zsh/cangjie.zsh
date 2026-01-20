@@ -9,6 +9,7 @@ typeset -gA CANGJIE_CONFIG=(
     [build_type]="relwithdebinfo"
     [kernel]="linux"
     [cmake_arch]="x86_64"
+    [mingw_path]="${MINGW_PATH}"
     [build_compiler]="true"
     [build_runtime]="true"
     [build_std]="true"
@@ -21,6 +22,30 @@ typeset -gA CANGJIE_CONFIG=(
     [compiler_path]="/usr/lib/llvm15/bin"
     [output]="$HOME/cangjie_sdk"
 )
+
+function cangjie::_is_windows() {
+    [[ "${kernel}" == "windows" ]]
+}
+
+function cangjie::_require_mingw() {
+    if [[ -z "${MINGW_PATH:-}" ]]; then
+        echo "❌ MINGW_PATH not set"
+        return 1
+    fi
+}
+
+function cangjie::_cpu_jobs() {
+    local jobs=""
+    if command -v nproc >/dev/null 2>&1; then
+        jobs=$(nproc)
+    elif command -v sysctl >/dev/null 2>&1; then
+        jobs=$(sysctl -n hw.ncpu 2>/dev/null)
+    fi
+    if [[ -z "${jobs}" || "${jobs}" -lt 1 ]]; then
+        jobs=1
+    fi
+    echo "${jobs}"
+}
 
 function cangjie::_run_in_subshell() {
    local task=$1
@@ -60,16 +85,21 @@ function cangjie::_init() {
     export RPATH=${CANGJIE_CONFIG[set_rpath]:+"--set-rpath \$RPATH"}
     export PATH=${CANGJIE_CONFIG[compiler_path]}:$PATH
     export cangjie_sdk_path=${CANGJIE_CONFIG[output]}
-    export CC="ccache clang"
-    export CXX="ccache clang++"
+    if [[ -n "${CANGJIE_CONFIG[mingw_path]}" ]]; then
+        export MINGW_PATH="${CANGJIE_CONFIG[mingw_path]}"
+    fi
+    local clang_bin="/usr/lib/llvm15/bin/clang"
+    local clangxx_bin="/usr/lib/llvm15/bin/clang++"
+    if command -v ccache >/dev/null 2>&1; then
+        export CC="ccache ${clang_bin}"
+        export CXX="ccache ${clangxx_bin}"
+    else
+        export CC="${clang_bin}"
+        export CXX="${clangxx_bin}"
+    fi
 }
 
-# 构建编译器 (子Shell中运行)
-function cangjie::_build_compiler() {
-    [[ ${CANGJIE_CONFIG[build_compiler]} != "true" ]] && return
-
-    echo "🚀 Building Cangjie Compiler..."
-
+function cangjie::_prepare_compiler_tree() {
     cd ${WORKSPACE}/cangjie_compiler || return 1
     mkdir -p build/build/utils_dep && cd build/build/utils_dep && rm -rf third_party_llvm-project || sleep 1
     ln -s $HOME/Code/CJ/third_party_llvm-project || sleep 1
@@ -83,12 +113,50 @@ function cangjie::_build_compiler() {
     # git pull --rebase || return 1
 
     cd ${WORKSPACE}/cangjie_compiler || return 1
-    
+}
+
+# 构建编译器 (子Shell中运行)
+function cangjie::_build_compiler() {
+    [[ ${CANGJIE_CONFIG[build_compiler]} != "true" ]] && return
+
+    echo "🚀 Building Cangjie Compiler..."
+
+    if cangjie::_is_windows; then
+        cangjie::_build_compiler_windows
+    else
+        cangjie::_build_compiler_linux
+    fi
+}
+
+function cangjie::_build_compiler_linux() {
+    cangjie::_prepare_compiler_tree || return 1
+
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
+    local jobs
+    jobs="$(cangjie::_cpu_jobs)"
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
-    python3 build.py build -t ${build_type} ${AddOptsBuildpy} --no-tests --jobs 14 \
+    python3 build.py build -t ${build_type} ${AddOptsBuildpy} --no-tests --jobs ${jobs} \
     && python3 build.py install --prefix ${install_dir} \
     && echo "🎉 Install cjc to ${install_dir}"
+}
+
+function cangjie::_build_compiler_windows() {
+    cangjie::_require_mingw || return 1
+    cangjie::_prepare_compiler_tree || return 1
+
+    local win_target="windows-x86_64"
+    local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
+    export CMAKE_PREFIX_PATH="${MINGW_PATH}/x86_64-w64-mingw32"
+    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
+    python3 build.py build -t ${build_type} --product cjc --no-tests \
+      --target ${win_target} --target-sysroot ${MINGW_PATH}/ \
+      --target-toolchain ${MINGW_PATH}/bin ${AddOptsBuildpy} \
+    && python3 build.py build -t ${build_type} --product libs \
+      --target ${win_target} --target-sysroot ${MINGW_PATH}/ \
+      --target-toolchain ${MINGW_PATH}/bin \
+    && python3 build.py install --host ${win_target} --prefix ${install_dir} \
+    && python3 build.py install --prefix ${install_dir} \
+    && cp -rf output-x86_64-w64-mingw32/* output
 }
 
 # 构建运行时 (子Shell中运行)
@@ -96,8 +164,18 @@ function cangjie::_build_runtime() {
     [[ ${CANGJIE_CONFIG[build_runtime]} != "true" ]] && return
 
     echo "🚀 Building Cangjie Runtime..."
+
+    if cangjie::_is_windows; then
+        cangjie::_build_runtime_windows
+    else
+        cangjie::_build_runtime_linux
+    fi
+}
+
+function cangjie::_build_runtime_linux() {
     cd ${WORKSPACE}/cangjie_runtime/runtime || return 1
-    
+    mkdir -p target
+
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
 
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
@@ -105,9 +183,37 @@ function cangjie::_build_runtime() {
     && python3 build.py install
 
     local runtime_output_dir="${WORKSPACE}/cangjie_runtime/runtime/output/common/${kernel}_${build_type}_${cmake_arch}"
-    
+
     [[ -d "${runtime_output_dir}" ]] || { echo "❌ Runtime dir missing"; return 1 }
-    cp -rf "${runtime_output_dir}"/{lib,runtime} "${install_dir}"
+    invoke_exec "cp -rf ${WORKSPACE}/cangjie_runtime/runtime/output/* target"
+    invoke_exec "cp -rf ${runtime_output_dir}/{lib,runtime} ${install_dir}"
+}
+
+function cangjie::_build_runtime_linux_for_windows() {
+    local saved_kernel="${kernel}"
+    kernel="linux"
+    cangjie::_build_runtime_linux
+    local rc=$?
+    kernel="${saved_kernel}"
+    return ${rc}
+}
+
+function cangjie::_build_runtime_windows() {
+    cangjie::_require_mingw || return 1
+    cangjie::_build_runtime_linux_for_windows || return 1
+    cd ${WORKSPACE}/cangjie_runtime/runtime || return 1
+    mkdir -p target
+
+    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
+    python3 build.py build -t ${build_type} --target windows-x86_64 \
+      --target-toolchain ${MINGW_PATH}/bin -v ${build_version} \
+    && python3 build.py install
+
+    local runtime_output_dir="${WORKSPACE}/cangjie_runtime/runtime/output/common/windows_${build_type}_${cmake_arch}"
+    [[ -d "${runtime_output_dir}" ]] || { echo "❌ Runtime dir missing"; return 1 }
+    cp -rf ${WORKSPACE}/cangjie_runtime/runtime/output/* target
+    cp -rf "${runtime_output_dir}"/{lib,runtime} "${WORKSPACE}/cangjie_compiler/output"
+    cp -rf "${runtime_output_dir}"/{lib,runtime} "${WORKSPACE}/cangjie_compiler/output-x86_64-w64-mingw32"
 }
 
 # 构建标准库 (子Shell中运行) 
@@ -116,17 +222,40 @@ function cangjie::_build_std() {
 
     if [[ -z $(command -v cjc) ]]; then
       ERROR "cjc not found"
-      source /home/elliot/cangjie_sdk/linux_relwithdebinfo_x86_64/envsetup.sh
+      return
     fi
 
     echo "🚀 Building Cangjie Standard Library..."
+
+    if cangjie::_is_windows; then
+      cangjie::_build_std_windows
+    else
+      cangjie::_build_std_linux
+    fi
+}
+
+function cangjie::_build_std_linux() {
     cd ${WORKSPACE}/cangjie_runtime/stdlib || return 1
+    local jobs
+    jobs="$(cangjie::_cpu_jobs)"
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
-    invoke_exec "python3 build.py build -j 12 -t ${build_type} --target-lib ${WORKSPACE}/cangjie_runtime/runtime/output/ --build-args='-Woff=all' && python3 build.py install"
+    invoke_exec "python3 build.py build -j ${jobs} -t ${build_type} --target-lib ${WORKSPACE}/cangjie_runtime/runtime/output/ --build-args='-Woff=all' && python3 build.py install"
 
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     invoke_exec "cp -rf ${WORKSPACE}/cangjie_runtime/stdlib/output/* ${install_dir}"
     echo "🎉 Install std to ${install_dir}"
+}
+
+function cangjie::_build_std_windows() {
+    cangjie::_require_mingw || return 1
+    cd ${WORKSPACE}/cangjie_runtime/stdlib || return 1
+    local jobs
+    jobs="$(cangjie::_cpu_jobs)"
+    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
+    invoke_exec "python3 build.py build -j ${jobs} -t ${build_type} --target windows-x86_64 --target-lib=${WORKSPACE}/cangjie_runtime/runtime/target --target-lib=${MINGW_PATH}/x86_64-w64-mingw32/lib --target-sysroot ${MINGW_PATH}/ --target-toolchain ${MINGW_PATH}/bin && python3 build.py install"
+
+    invoke_exec "cp -rf ${WORKSPACE}/cangjie_runtime/stdlib/output/* ${WORKSPACE}/cangjie_compiler/output/"
+    invoke_exec "cp -rf ${WORKSPACE}/cangjie_runtime/stdlib/output/* ${WORKSPACE}/cangjie_compiler/output-x86_64-w64-mingw32/"
 }
 
 # 构建STDX扩展库 (子Shell中运行)
@@ -137,6 +266,15 @@ function cangjie::_build_stdx() {
       ERROR "cjc not found"
       source /home/elliot/cangjie_sdk/linux_relwithdebinfo_x86_64/envsetup.sh
     fi
+
+    if cangjie::_is_windows; then
+      cangjie::_build_stdx_windows
+    else
+      cangjie::_build_stdx_linux "$@"
+    fi
+}
+
+function cangjie::_build_stdx_linux() {
     local package=$1
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     local modules_dir=${install_dir}/modules/linux_x86_64_cjnative/stdx
@@ -157,15 +295,32 @@ function cangjie::_build_stdx() {
     set CANGJIE_STDX_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/\{dynamic/static\}/stdx
 }
 
+function cangjie::_build_stdx_windows() {
+    cangjie::_require_mingw || return 1
+    echo "🚀 Building Cangjie STDX Extension (windows)..."
+    cd ${WORKSPACE}/cangjie_stdx || return 1
+    [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
+    invoke_exec "python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include --target-lib=${MINGW_PATH}/x86_64-w64-mingw32/lib --target windows-x86_64 --target-sysroot ${MINGW_PATH}/ --target-toolchain ${MINGW_PATH}/bin && python3 build.py install" || return -1
+    export CANGJIE_STDX_PATH="${WORKSPACE}/cangjie_stdx/target/windows_x86_64_cjnative/static/stdx"
+}
+
 # 构建工具集 (子Shell中运行)
 function cangjie::_build_tool_lsp() {
     [[ ${CANGJIE_CONFIG[build_tools]} != "true" ]] && return
     while [[ -z $(command -v cjc) ]]; do
       echo "cjc not found"
-      ccj
+      return
     done
 
     echo "🚀 Building Cangjie Tool: lsp..."
+    if cangjie::_is_windows; then
+      cangjie::_build_tool_lsp_windows
+    else
+      cangjie::_build_tool_lsp_linux
+    fi
+}
+
+function cangjie::_build_tool_lsp_linux() {
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}/tools/bin"
     ( cd ${WORKSPACE}/cangjie_tools/cangjie-language-server/build && \
       python3 build.py clean && \
@@ -173,18 +328,42 @@ function cangjie::_build_tool_lsp() {
       python3 build.py install --prefix ${install_dir} )
 }
 
+function cangjie::_build_tool_lsp_windows() {
+    cangjie::_require_mingw || return 1
+    ( cd ${WORKSPACE}/cangjie_tools/cangjie-language-server/build && \
+      python3 build.py clean && \
+      python3 build.py build -t ${build_type} --target windows-x86_64 && \
+      python3 build.py install )
+}
+
 function cangjie::_build_tool_cjpm() {
     [[ ${CANGJIE_CONFIG[build_tools]} != "true" ]] && return
     while [[ -z $(command -v cjc) ]]; do
       echo "cjc not found"
-      ccj
+      return
     done
 
     echo "🚀 Building Cangjie Tool: cjpm..."
+    if cangjie::_is_windows; then
+      cangjie::_build_tool_cjpm_windows
+    else
+      cangjie::_build_tool_cjpm_linux
+    fi
+}
+
+function cangjie::_build_tool_cjpm_linux() {
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     ( cd ${WORKSPACE}/cangjie_tools/cjpm/build && \
       python3 build.py clean && \
       python3 build.py build -t ${build_type} --set-rpath ${RPATH} --prefix ${install_dir} && \
+      python3 build.py install )
+}
+
+function cangjie::_build_tool_cjpm_windows() {
+    cangjie::_require_mingw || return 1
+    ( cd ${WORKSPACE}/cangjie_tools/cjpm/build && \
+      python3 build.py clean && \
+      python3 build.py build -t ${build_type} --target windows-x86_64 && \
       python3 build.py install )
 }
 
@@ -193,14 +372,30 @@ function cangjie::_build_tool_cjfmt() {
     [[ ${CANGJIE_CONFIG[build_tools]} != "true" ]] && return
     while [[ -z $(command -v cjc) ]]; do
       echo "cjc not found"
-      ccj
+      return
     done
 
-    local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     echo "🚀 Building Cangjie Tool: cjfmt..."
+    if cangjie::_is_windows; then
+      cangjie::_build_tool_cjfmt_windows
+    else
+      cangjie::_build_tool_cjfmt_linux
+    fi
+}
+
+function cangjie::_build_tool_cjfmt_linux() {
+    local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     ( cd ${WORKSPACE}/cangjie_tools/cjfmt/build && \
       python3 build.py clean && \
       python3 build.py build -t ${build_type} --prefix ${install_dir} && \
+      python3 build.py install )
+}
+
+function cangjie::_build_tool_cjfmt_windows() {
+    cangjie::_require_mingw || return 1
+    ( cd ${WORKSPACE}/cangjie_tools/cjfmt/build && \
+      python3 build.py clean && \
+      python3 build.py build -t ${build_type} --target windows-x86_64 && \
       python3 build.py install )
 }
 
@@ -209,15 +404,29 @@ function cangjie::_build_tool_hle() {
     [[ ${CANGJIE_CONFIG[build_tools]} != "true" ]] && return
     while [[ -z $(command -v cjc) ]]; do
       echo "cjc not found"
-      ccj
+      return
     done
     echo "🚀 Building Cangjie Tool: hle..."
-    
+    if cangjie::_is_windows; then
+      cangjie::_build_tool_hle_windows
+    else
+      cangjie::_build_tool_hle_linux
+    fi
+}
+
+function cangjie::_build_tool_hle_linux() {
     ( cd ${WORKSPACE}/cangjie_tools/hyperlangExtension/build && \
       python3 build.py clean && \
       python3 build.py build -t ${build_type} --prefix ${cangjie_sdk_path} && \
       python3 build.py install )
-    
+}
+
+function cangjie::_build_tool_hle_windows() {
+    cangjie::_require_mingw || return 1
+    ( cd ${WORKSPACE}/cangjie_tools/hyperlangExtension/build && \
+      python3 build.py clean && \
+      python3 build.py build -t ${build_type} --target windows-x86_64 && \
+      python3 build.py install )
 }
 
 function cangjie::_build_basic() {
@@ -320,6 +529,11 @@ Examples:
 
   # Build all tools
   cangjie::build tools
+
+  # Cross-compile for Windows
+  cangjie::config kernel windows
+  cangjie::config mingw_path /path/to/mingw
+  cangjie::build runtime
 EOF
 }
 
@@ -453,6 +667,7 @@ function cjh {
 
   local -a libNames libDirs linkExtra runArgs
   local needRun=true
+  local needTest=false
   local filename="main.cj"
   local output="main"
   local lang="cj"
@@ -494,7 +709,8 @@ function cjh {
 $'Options:\n'\
 $'  -h                Show help\n'\
 $'  -b                Build only (do not run)\n'\
-$'  -x                Enable stdx profile: --import-path $CANGJIE_STDX_PATH -L $CANGJIE_STDX_PATH + stdx libs\n'\
+$'  -t                Build with test (do not run)\n'\
+$'  -x                Enable stdx profile\n'\
 $'  -w                Keep warnings (do NOT add -Woff all)\n'\
 $'  -f <file>          Source file (default: main.cj)\n'\
 $'  -o <out>           Output name (default: main)\n'\
@@ -514,6 +730,7 @@ $'  CJ_SDK_LIBPATH: extra runtime lib path injected into LD_LIBRARY_PATH when ru
       -b) needRun=false ;;
       -x) useStdx=true ;;
       -w) keepWarnings=true ;;
+      -t) needTest=true ;;
       -s) useStatic=true ;;
       -f) (( i++ )); filename="${argv[i]:-}" ;;
       -o) (( i++ )); output="${argv[i]:-}" ;;
@@ -551,6 +768,10 @@ $'  CJ_SDK_LIBPATH: extra runtime lib path injected into LD_LIBRARY_PATH when ru
     cmd+=(-g --error-count-limit all)
     if [[ "$keepWarnings" != true ]]; then
       cmd+=(-Woff all)
+    fi
+
+    if [[ "$needTest" == true ]]; then
+      cmd+=(--test)
     fi
 
     if [[ "$useStatic" == true ]]; then
@@ -627,7 +848,7 @@ function cangjie::_build_ninja {
     [[ ${CANGJIE_CONFIG[build_std]} != "true" ]] && return
     while [[ -z $(command -v cjc) ]]; do
       echo "cjc not found"
-      ccj
+      return
     done
 
     local package=$2
@@ -642,7 +863,7 @@ function cangjie::_build_ninja {
       echo "Error: Directory build/build does not exist."
       exit 1
     fi
-    ninja cangjieCJNATIVE$1
+    ninja $1
     python3 ${WORKSPACE}/cangjie_runtime/stdlib/build.py install
 
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
@@ -662,4 +883,3 @@ function cjcclip() {
   echo "[cjcclip] out: $out" >&2
   invoke_exec "$out"
 }
-

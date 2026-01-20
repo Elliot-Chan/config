@@ -100,4 +100,7 @@ function Config:append(new_options)
    return self
 end
 
+Config.use_ime = true
+Config.xim_im_name = 'fcitx'
+
 return Config

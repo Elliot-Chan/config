@@ -22,6 +22,7 @@
       // "idle_inhibitor",
       "custom/weather",
       "custom/network_speed",
+      "custom/gcclip",
       //"power-profiles-daemon",
       // "pulseaudio",
       "cpu",
@@ -271,6 +272,13 @@
       "on-click": "wl-copy $(ip -4 addr show up scope global | grep inet | head -n1 | awk '{print $2}' | cut -d/ -f1)",
       "return-type": "json"
     },
+    "custom/gcclip": {
+      "format": "󰅌",
+      "tooltip": false,
+      "on-click": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy'",
+      "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy-image'",
+      "on-click-right": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh paste'"
+    },
     "custom/media": {
       "format": "{icon} {text}",
       "return-type": "json",
@@ -307,108 +315,6 @@
       "on-click": "swaync-client -t -sw",
       "on-click-right": "swaync-client -d -sw",
       "escape": true
-    }
-  },
-  {
-    "height": 30,
-    "spacing": 4,
-    "output": "HDMI-A-3",
-    "modules-left": [
-      "sway/mode",
-      "sway/scratchpad"
-    ],
-    "sway/scratchpad": {
-      "format": "{icon}   {count}",
-      "show-empty": false,
-      "format-icons": [
-        "",
-        ""
-      ],
-      "tooltip": true,
-      "tooltip-format": "{app}: {title}"
-    },
-    "sway/workspaces": {
-      "disable-scroll": true,
-      "all-outputs": true,
-      "warp-on-scroll": false,
-      "format": "{name}: {icon}",
-      "format-icons": {
-        // "1": "",
-        // "2": "",
-        // "3": "",
-        // "4": "",
-        // "5": "",
-        "urgent": "",
-        "focused": "",
-        "default": ""
-      }
-    },
-    "sway/mode": {
-      "format": "<span style=\"italic\">{}</span>"
-    },
-    "modules-center": [
-      "sway/window"
-    ],
-    "modules-right": [],
-    // "tray"
-    // "custom/weather"
-    // "cpu",
-    // "custom/notification",
-    // "custom/clock"
-    //],
-    "custom/clock": {
-      "exec": "date +%T",
-      "interval": 1,
-      "format": "{}",
-      "format-alt": "{}"
-    },
-    "custom/weather": {
-      "interval": 3600,
-      "format": "{} ",
-      "format-alt": "{}",
-      "exec": "python ~/.config/waybar/scripts/weather.py",
-      "max-length": 100,
-      "tooltip": true,
-      "return-type": "json"
-    },
-    "cpu": {
-      "format": "  {usage}%",
-      "tooltip": false
-    },
-    "custom/notification": {
-      "tooltip": false,
-      "format": "{icon}",
-      "format-icons": {
-        "notification": "<span foreground='red'><sup></sup></span>",
-        "none": "",
-        "dnd-notification": "<span foreground='red'><sup></sup></span>",
-        "dnd-none": "",
-        "inhibited-notification": "<span foreground='red'><sup></sup></span>",
-        "inhibited-none": "",
-        "dnd-inhibited-notification": "<span foreground='red'><sup></sup></span>",
-        "dnd-inhibited-none": ""
-      },
-      "return-type": "json",
-      "exec-if": "which swaync-client",
-      "exec": "swaync-client -swb",
-      "on-click": "swaync-client -t -sw",
-      "on-click-right": "swaync-client -d -sw",
-      "escape": true
-    },
-    "tray": {
-      // "icon-size": 21,
-      "spacing": 10
-      // "icons": {
-      //   "blueman": "bluetooth",
-      //   "TelegramDesktop": "$HOME/.local/share/icons/hicolor/16x16/apps/telegram.png"
-      // }
-    },
-    "custom/network_speed": {
-      "tooltip": true,
-      "exec": "~/.config/waybar/scripts/network_speed.sh",
-      "interval": 1,
-      "format": "{}",
-      "return-type": "json"
     }
   },
   {
@@ -455,6 +361,7 @@
     "modules-right": [
       "custom/weather",
       "cpu",
+      "custom/gcclip",
       "custom/notification",
       "custom/clock"
     ],
@@ -476,6 +383,13 @@
     "cpu": {
       "format": "  {usage}%",
       "tooltip": false
+    },
+    "custom/gcclip": {
+      "format": "󰅌",
+      "tooltip": false,
+      "on-click": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy'",
+      "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy-image'",
+      "on-click-right": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh paste'"
     },
     "custom/notification": {
       "tooltip": false,
@@ -533,6 +447,7 @@
     "modules-right": [
       // "idle_inhibitor",
       "custom/network_speed",
+      "custom/gcclip",
       //"power-profiles-daemon",
       // "pulseaudio",
       "cpu",
@@ -788,6 +703,13 @@
       "format-alt": "{}",
       "on-click": "wl-copy $(ip -4 addr show up scope global | grep inet | head -n1 | awk '{print $2}' | cut -d/ -f1)",
       "return-type": "json"
+    },
+    "custom/gcclip": {
+      "format": "󰅌",
+      "tooltip": false,
+      "on-click": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy'",
+      "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy-image'",
+      "on-click-right": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh paste'"
     },
     "custom/media": {
       "format": "{icon} {text}",

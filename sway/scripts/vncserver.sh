@@ -5,5 +5,5 @@ for _ in $(seq 20); do
   sleep 0.25
 done
 pkill -x wayvnc 2>/dev/null || true
-# wayvnc -o HEADLESS-1 -r 0.0.0.0 5901
-wayvnc -o HDMI-A-2 -r 0.0.0.0 5901
+#wayvnc -o HEADLESS-1 -r 0.0.0.0 5901 &
+wayvnc -o HDMI-A-2 -r 0.0.0.0 5902 &
