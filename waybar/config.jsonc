@@ -366,7 +366,7 @@
       "custom/clock"
     ],
     "custom/clock": {
-      "exec": "date +%T",
+      "exec": "date +%c",
       "interval": 1,
       "format": "{}",
       "format-alt": "{}"

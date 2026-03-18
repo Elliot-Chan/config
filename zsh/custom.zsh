@@ -11,6 +11,15 @@ function setProxy() {
   export no_proxy="localhost,127.0.0.1,localaddress,.localdomain.com"
 }
 
+function unsetProxy() {
+  unset http_proxy
+  unset https_proxy
+  unset ftp_proxy
+  unset all_proxy
+  unset rsync_proxy
+  unset no_proxy
+}
+
 [ "$(tty)" = "/dev/tty1" ] && exec bash -lc "$HOME/.local/bin/start-scroll"
 [ "$(tty)" = "/dev/tty2" ] && exec bash -lc "$HOME/.local/bin/start-sway"
 

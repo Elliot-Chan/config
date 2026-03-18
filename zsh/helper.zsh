@@ -172,8 +172,13 @@ ccj() {
         export CANGJIE_SDK_PATH=$selected_folder
         which cjc 2>/dev/null || echo "cjc 未在 PATH 中"
         cjc --version 2>/dev/null || echo "cjc --version 执行失败"
-        if [[ $param == "dynamic" && $CANGJIE_STDX_PATH ]]; then
+        if [[ $lib_type == "dynamic" && ! -z $CANGJIE_STDX_PATH ]]; then
           export LD_LIBRARY_PATH=$CANGJIE_STDX_PATH:$LD_LIBRARY_PATH
+          if [[ -z $CANGJIE_PATH ]]; then
+            export CANGJIE_PATH=$CANGJIE_STDX_PATH
+          else
+            export CANGJIE_PATH=$CANGJIE_STDX_PATH:$CANGJIE_PATH
+          fi
         fi
         local pcre2=( ${selected_folder}/**/libpcre2-*(.N) )
         for f in $pcre2; do 
@@ -193,9 +198,111 @@ ccj() {
     fi
 }
 
+cccj() {
+    setopt local_options no_xtrace
+    local param=$1
+
+    local sdk_dirs=(~/cangjie_sdk $HOME/code/dev/cangjie $HOME/code/br_main/cangjie)
+    list_folders "${sdk_dirs[@]}"
+
+    if (( ${#folders_list[@]} == 0 )); then
+        echo "未找到可用的 Cangjie SDK 目录"
+        return 1
+    fi
+
+    local latest_folder=""
+    local latest_date=0
+    local dir date_str date_num
+
+    for dir in "${folders_list[@]}"; do
+        if [[ $dir =~ '([0-9]{8})' ]]; then
+            date_str=$match[1]
+            date_num=$((10#$date_str))
+            if (( date_num > latest_date )); then
+                latest_date=$date_num
+                latest_folder=$dir
+            fi
+        fi
+    done
+
+    if [[ -z $latest_folder ]]; then
+        local latest_ts=0
+        local envsetup ts
+        for dir in "${folders_list[@]}"; do
+            envsetup="$dir/envsetup.sh"
+            if [[ -f $envsetup ]]; then
+                ts=$(stat -c %Y -- "$envsetup" 2>/dev/null)
+            else
+                ts=$(stat -c %Y -- "$dir" 2>/dev/null)
+            fi
+            [[ -z $ts ]] && ts=0
+            if (( ts > latest_ts )); then
+                latest_ts=$ts
+                latest_folder=$dir
+            fi
+        done
+        [[ -n $latest_folder ]] && echo "未找到带日期的 SDK 目录，改用文件时间: $latest_folder"
+    fi
+
+    if [[ -z $latest_folder ]]; then
+        echo "未找到可用的 Cangjie SDK 目录"
+        return 1
+    fi
+
+    echo "自动选择最新: $latest_folder"
+    source_envsetup "$latest_folder"
+
+    local lib_type="dynamic"
+    if [[ $param == "static" ]]; then
+      lib_type="static"
+    fi
+    local matches=( "$latest_folder"/**/$lib_type/stdx(N/) )
+    local base=${latest_folder:t}
+    if [[ $base == cangjie ]]; then
+      matches=( $(realpath $latest_folder/..)/**/$lib_type/stdx(N/) )
+    fi
+    (( ${#matches[@]} )) && export CANGJIE_STDX_PATH=$matches[1] && echo "set CANGJIE_STDX_PATH to ${matches[1]}"
+
+    export CANGJIE_SDK_PATH=$latest_folder
+    which cjc 2>/dev/null || echo "cjc 未在 PATH 中"
+    cjc --version 2>/dev/null || echo "cjc --version 执行失败"
+    if [[ $param == "dynamic" && $CANGJIE_STDX_PATH ]]; then
+      export LD_LIBRARY_PATH=$CANGJIE_STDX_PATH:$LD_LIBRARY_PATH
+    fi
+    local pcre2=( ${latest_folder}/**/libpcre2-*(.N) )
+    for f in $pcre2; do 
+      if [[ ${file:e} != so ]] ; then
+          continue
+      fi
+      local confirm
+      echo "是否删除 ${f} (y/N)"
+      read -r confirm
+      if [[ $confirm == [yY] ]]; then
+        rm -- "$f" && echo "成功删除 ${f}"
+      fi
+    done
+}
+
 cdi() {  # cd-from-stdin
   local dir
   IFS= read -r dir || return 1
   cd -- "$dir"
 }
 
+copypath() {
+  local p
+  p="$(realpath "${1:-.}")" || return 1
+
+  if command -v wl-copy >/dev/null 2>&1; then
+    printf '%s' "$p" | wl-copy
+  elif command -v xclip >/dev/null 2>&1; then
+    printf '%s' "$p" | xclip -selection clipboard
+  elif command -v xsel >/dev/null 2>&1; then
+    printf '%s' "$p" | xsel --clipboard --input
+  else
+    print -u2 -- "no clipboard tool found"
+    return 1
+  fi
+
+  print -r -- "$p"
+}

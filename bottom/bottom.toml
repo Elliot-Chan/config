@@ -1,0 +1,51 @@
+# bottom.toml - build/debug friendly layout
+
+[flags]
+rate = "1s"
+tree = true
+process_command = true
+regex = true
+case_sensitive = false
+enable_cache_memory = true
+process_memory_as_value = true
+hide_table_gap = true
+show_table_scroll_position = true
+battery = false
+enable_gpu = false
+
+[processes]
+# 终端宽的话用完整列；窄的话删掉 T.Read/T.Write/User/State 也行
+columns = ["PID", "Name", "CPU%", "Mem%", "R/s", "W/s", "T.Read", "T.Write", "User", "State", "Time"]
+
+# ===== Layout =====
+# 设计：
+# Row1: CPU（占高一点，方便看每核抖动）
+# Row2: Mem + Disk（观察内存爬升、链接/打包 IO 峰值）
+# Row3: Proc（最大区域，默认焦点）
+# Row4: Net（拉依赖/下载时看波动）
+
+[[row]]
+  ratio = 28
+  [[row.child]]
+    type = "cpu"
+
+[[row]]
+  ratio = 22
+  [[row.child]]
+    ratio = 3
+    type = "mem"
+  [[row.child]]
+    ratio = 2
+    type = "disk"
+
+[[row]]
+  ratio = 38
+  [[row.child]]
+    type = "proc"
+    default = true
+
+[[row]]
+  ratio = 12
+  [[row.child]]
+    type = "net"
+

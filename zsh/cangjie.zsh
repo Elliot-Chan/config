@@ -654,10 +654,11 @@ function cjr() {
         continue
       fi
       if [[ ! " ${initial_files[@]} " =~ " ${file} " ]]; then
-        invoke_exec "rm -r \"$files\"" "false"
+        invoke_exec "rm -r \"$file\"" "false"
       fi
     done
   fi
+  invoke_exec "./main"
 }
 
 function cjh {
@@ -675,7 +676,6 @@ function cjh {
   local keepWarnings=false   # -w: 不添加 -Woff all
   local useStatic=false 
 
-  # stdx libs：保持你确认过的 cjc 写法
   local -a stdxLibs=(
     --link-option --start-group
     -lstdx.encoding.json
