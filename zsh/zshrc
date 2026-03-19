@@ -18,7 +18,9 @@ ZSH=/usr/share/oh-my-zsh/
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 # ZSH_THEME="robbyrussell"
-ZSH_THEME="ys"
+# Prompt is provided by powerlevel10k below; keep Oh My Zsh theme disabled to
+# avoid extra async git hooks in large repositories.
+ZSH_THEME=""
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -62,7 +64,8 @@ ZSH_THEME="ys"
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
 # much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
+DISABLE_UNTRACKED_FILES_DIRTY="true"
+zstyle ':omz:alpha:lib:git' async-prompt no
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
@@ -119,6 +122,8 @@ if [[ ! -d $ZSH_CACHE_DIR ]]; then
 fi
 
 source $ZSH/oh-my-zsh.sh
+autoload -Uz add-zsh-hook
+add-zsh-hook -d precmd _omz_async_request 2>/dev/null || true
 
 # source /usr/share/zsh/share/antigen.zsh
 # antigen bundle zdharma-continuum/fast-syntax-highlighting
@@ -138,8 +143,8 @@ source $HOME/.config/zsh/cangjie.zsh
 source $HOME/.config/zsh/alias.zsh
 source $HOME/.config/zsh/git.zsh
 source $HOME/.config/zsh/custom.zsh
-source $HOME/.custom.zsh
-source /usr/share/doc/git-extras/git-extras-completion.zsh
+[[ -f $HOME/.custom.zsh ]] && source $HOME/.custom.zsh
+[[ -f /usr/share/doc/git-extras/git-extras-completion.zsh ]] && source /usr/share/doc/git-extras/git-extras-completion.zsh
 
 zstyle ':completion:*:cd:*' ignore-parents true
 compdef -d cd
@@ -155,9 +160,8 @@ eval "$(zoxide init zsh)"
 alias zz='zi'
 
 
-setProxy
 fpath=($HOME/.zsh-complete $fpath)
-eval "$(sheldon source)"
+command -v sheldon >/dev/null 2>&1 && eval "$(sheldon source)"
 alias vim="nvim"
 alias yay="paru"
 alias fda='fd -I'

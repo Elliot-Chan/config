@@ -119,6 +119,7 @@ keymap = [
 
 	# Copy
 	{ on = [ "c", "c" ], run = "copy path",             desc = "cp absolute path" },
+	{ on = [ "c", "r" ], run = '''shell '~/.config/yazi/scripts/yazi-copy-path.sh rel "$1"' --confirm''', desc = "cp relative path" },
 	{ on = [ "c", "d" ], run = "copy dirname",          desc = "cp parent path" },
 	{ on = [ "c", "f" ], run = "copy filename",         desc = "cp filename" },
 	{ on = [ "c", "n" ], run = "copy name_without_ext", desc = "cp filename without ext" },
@@ -172,9 +173,12 @@ keymap = [
 	{ on = [ "g", "y" ],       run = "cd ~/.config/yazi/",          desc = "Go to video" },
 	{ on = [ "g", "i" ],       run = "cd ~/Images",          desc = "Go to image" },
 	{ on = [ "g", "r" ],       run = "cd /",          desc = "Go to /" },
+	{ on = [ "g", "T" ],       run = "cd ~/.local/share/Trash/files", desc = "Go to trash" },
 	{ on = [ "g", "j" ],       run = "cd /home/wrq/deskenv/archieve/",          desc = "Go to dev" },
 	{ on = [ "g", "k" ],       run = "cd /home/wrq/deskenv/master",       desc = "Go to master" },
 	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Go by interactive" },
+	{ on = [ "u", "t" ],       run = '''shell '~/.config/yazi/scripts/yazi-open-here.sh wezterm "$PWD"' --confirm''', desc = "Open wezterm here" },
+	{ on = [ "u", "v" ],       run = '''shell '~/.config/yazi/scripts/yazi-open-here.sh nvim "$PWD"' --confirm''', desc = "Open nvim here" },
 
 	# Help
 	{ on = [ "?" ], run = "help", desc = "Open help" },
@@ -339,6 +343,4 @@ desc = "Preview images in sxiv"
 # 	shell --confirm 'for path in "$@"; do  echo -en "file://${path}\n"; done |  xclip -i -selection clipboard -rmlastnl -t text/uri-list'
 # ''' ]
 # desc = "clip to x11 clipboard"
-
-
 

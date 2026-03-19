@@ -4,6 +4,28 @@ local act = wezterm.action
 
 local background = require('utils.background')
 
+local projects = require('config.projects')
+
+local function valid_project_choices()
+   local choices = {}
+   for _, project in ipairs(projects) do
+      if type(project.id) == "string" and type(project.label) == "string" and type(project.cwd) == "string" then
+         table.insert(choices, { id = project.id, label = project.label })
+      end
+   end
+   return choices
+end
+
+local project_choices = valid_project_choices()
+
+local function pane_cwd(pane)
+   local cwd = pane:get_current_working_dir()
+   if cwd and cwd.file_path then
+      return cwd.file_path
+   end
+   return wezterm.home_dir
+end
+
 local mod = {}
 
 if platform.is_mac then
@@ -92,6 +114,54 @@ local keys = {
    -- window --
    -- window: spawn windows
    { key = 'n',          mods = mod.SUPER,     action = act.SpawnWindow },
+   {
+      key = 'N',
+      mods = mod.SUPER,
+      action = wezterm.action_callback(function(window, pane)
+         window:perform_action(
+            act.SpawnCommandInNewWindow({
+               cwd = pane_cwd(pane),
+               args = { 'zsh', '-l' },
+            }),
+            pane
+         )
+      end),
+   },
+   {
+      key = 'o',
+      mods = mod.SUPER,
+      action = act.InputSelector({
+         title = 'Open Project',
+         choices = project_choices,
+         fuzzy = true,
+         action = wezterm.action_callback(function(window, pane, id, label)
+            if not id then
+               return
+            end
+            for _, project in ipairs(projects) do
+               if project.id == id then
+                  window:perform_action(
+                     act.SpawnCommandInNewTab({
+                        cwd = project.cwd,
+                        args = { 'zsh', '-l' },
+                     }),
+                     pane
+                  )
+                  return
+               end
+            end
+         end),
+      }),
+   },
+   {
+      key = 'y',
+      mods = mod.SUPER,
+      action = wezterm.action_callback(function(window, pane)
+         local cwd = pane_cwd(pane)
+         window:copy_to_clipboard(cwd)
+         wezterm.log_info('copied cwd: ' .. cwd)
+      end),
+   },
 
    -- window: zoom window
    {

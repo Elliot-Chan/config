@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-03-19T18:00:00+08:00",
+  "language": "cangjie",
+  "records": [
+    {
+      "id": "stdx::net::tls::struct::ClientHello",
+      "language": "cangjie",
+      "kind": "struct",
+      "category": "type",
+      "name": "ClientHello",
+      "fqname": "stdx.net.tls.ClientHello",
+      "package": "stdx",
+      "module": "stdx.net.tls",
+      "display": "ClientHello",
+      "signature": "public struct ClientHello",
+      "summary_md": "TLS ClientHello 消息。",
+      "details_md": "更长的 Markdown 文档……",
+      "params": [],
+      "returns_md": null,
+      "examples_md": [
+        "```cangjie\nlet hello = ClientHello(...)\n```"
+      ],
+      "doc_url": "/stdx/net/tls/ClientHello.html",
+      "since": "1.2.0",
+      "deprecated": false,
+      "deprecated_message_md": null,
+      "aliases": [
+        "ClientHello",
+        "stdx.net.tls.ClientHello"
+      ],
+      "visibility": "public",
+      "arity": null,
+      "overload_key": null,
+      "source": {
+        "file": "stdx/net/tls/client_hello.cj",
+        "line": 12,
+        "column": 1
+      },
+      "search_text": "ClientHello stdx.net.tls.ClientHello public struct TLS ClientHello 消息"
+    },
+    {
+      "id": "stdx::net::tls::func::parse_certificate#1",
+      "language": "cangjie",
+      "kind": "function",
+      "category": "callable",
+      "name": "parseCertificate",
+      "fqname": "stdx.net.tls.parseCertificate",
+      "package": "stdx",
+      "module": "stdx.net.tls",
+      "display": "parseCertificate",
+      "signature": "public func parseCertificate(data: Array<UInt8>): Certificate",
+      "summary_md": "解析证书字节流。",
+      "details_md": null,
+      "params": [
+        {
+          "label": "data",
+          "type": "Array<UInt8>",
+          "doc_md": "DER 或 PEM 解码后的字节。",
+          "default_md": null
+        }
+      ],
+      "returns_md": "返回解析后的 `Certificate`。",
+      "examples_md": [],
+      "doc_url": "/stdx/net/tls/parseCertificate.html",
+      "since": "1.2.0",
+      "deprecated": false,
+      "deprecated_message_md": null,
+      "aliases": [
+        "parseCertificate",
+        "stdx.net.tls.parseCertificate"
+      ],
+      "visibility": "public",
+      "arity": 1,
+      "overload_key": "#1",
+      "source": {
+        "file": "stdx/net/tls/certificate.cj",
+        "line": 42,
+        "column": 1
+      },
+      "search_text": "parseCertificate stdx.net.tls.parseCertificate Array<UInt8> Certificate 解析证书字节流"
+    }
+  ]
+}

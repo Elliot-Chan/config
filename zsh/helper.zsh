@@ -284,9 +284,32 @@ cccj() {
 }
 
 cdi() {  # cd-from-stdin
-  local dir
-  IFS= read -r dir || return 1
-  cd -- "$dir"
+  local input target
+  if (( $# > 0 )); then
+    input=$1
+  else
+    IFS= read -r input || return 1
+  fi
+  [[ -z "$input" ]] && return 1
+
+  target="$input"
+  if [[ -d "$target" ]]; then
+    cd -- "$target"
+    return
+  fi
+
+  if [[ -e "$target" ]]; then
+    cd -- "${target:h}"
+    return
+  fi
+
+  if [[ "$target" == */* && -d "${target:h}" ]]; then
+    cd -- "${target:h}"
+    return
+  fi
+
+  print -u2 -- "cdi: no such path: $input"
+  return 1
 }
 
 copypath() {

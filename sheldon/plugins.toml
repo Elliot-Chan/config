@@ -32,8 +32,9 @@ github = "zsh-users/zsh-autosuggestions"
 [plugins.git-extra]
 github = "tj/git-extras"
 
-[plugins.git-prompt]
-github = "olivierverdier/zsh-git-prompt"
+# powerlevel10k already provides VCS status; keep extra git prompt hooks disabled.
+#[plugins.git-prompt]
+#github = "olivierverdier/zsh-git-prompt"
 
 [plugins.git-open]
 github = "paulirish/git-open"

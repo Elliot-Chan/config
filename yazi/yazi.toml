@@ -24,7 +24,9 @@ folder = [
 	{ run = 'code  "$@"',orphan = true, desc = "vscode" , for = "linux" },
 	{ run = 'zeditor  "$@"',orphan = true, desc = "zed" , for = "linux" },
 	{ run = '''fish -c "lazygit -p "$1""''', block = true,desc = "lazygit", for = "linux" },
-	{ run = 'basename "$@" | xargs -I {} tar --use-compress-program=pigz -cf ~/down/{}.tar.gz {}',orphan = true, desc = "archive" , for = "linux"  },
+	{ run = '~/.config/yazi/scripts/archive_selected.sh "$@"',orphan = true, desc = "archive" , for = "linux"  },
+	{ run = '~/.config/yazi/scripts/yazi-open-here.sh wezterm "$1"', orphan = true, desc = "wezterm here" , for = "linux"  },
+	{ run = '~/.config/yazi/scripts/yazi-open-here.sh nvim "$1"', orphan = true, desc = "nvim here" , for = "linux"  },
 
 ]
 archive = [
@@ -46,7 +48,7 @@ image = [
 ]
 video = [
 	{ run = 'mpv "$@" ', orphan = true, desc = "mpv" , for = "linux" },
-	{ run = 'ffmpeg -i "$@" -vf "fps=10" -loop 0 "$@".gif', orphan = true, desc = "change to gif"  , for = "linux" },	
+	{ run = '~/.config/yazi/scripts/video_to_gif.sh "$1"', orphan = true, desc = "change to gif"  , for = "linux" },	
 
 ]
 audio = [
@@ -146,4 +148,3 @@ run  = "current-size"
 id   = "current-size"
 name = "*/"
 run  = "current-size"
-
