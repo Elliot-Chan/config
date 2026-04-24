@@ -152,7 +152,8 @@ NETWORK_SPEED = {
 
 GCCLIP = {
     "format": "󰅌",
-    "tooltip": False,
+    "tooltip": True,
+    "tooltip-format": "GCClip\n左键: 上传剪贴板文本\n中键: 上传剪贴板图片\n右键: 拉取文本到剪贴板",
     "on-click": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy'",
     "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy-image'",
     "on-click-right": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh paste'",
