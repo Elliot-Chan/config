@@ -1,19 +1,18 @@
-local gpu_adapters = require('utils.gpu-adapter')
-local colors = require('colors.custom')
-
 local theme = require('utils.theme')
 
 return {
-   max_fps = 240,
-   front_end = 'WebGpu',
-   webgpu_power_preference = 'HighPerformance',
-   webgpu_preferred_adapter = gpu_adapters:pick_best(),
+   max_fps = 120,
+   front_end = 'OpenGL',
+   -- WebGPU/Vulkan can occasionally stall on some Wayland + GPU driver stacks.
+   -- Keep the manual adapter examples here for quick rollback if needed.
+   -- webgpu_power_preference = 'HighPerformance',
+   -- webgpu_preferred_adapter = gpu_adapters:pick_best(),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Gl', 'Other'),
    underline_thickness = '1.5pt',
 
    -- cursor
-   animation_fps = 120,
+   animation_fps = 60,
    cursor_blink_ease_in = 'EaseOut',
    cursor_blink_ease_out = 'EaseOut',
    default_cursor_style = 'BlinkingBlock',

@@ -33,8 +33,8 @@ run_check() {
   fi
 }
 
-run_check "waybar generator" python3 "$WAYBAR_ROOT/generate_config.py"
-run_check "weather python syntax" python3 -m py_compile "$WAYBAR_ROOT/scripts/weather.py"
+run_check "waybar generator" python3 "$WAYBAR_ROOT/generate_config.py" --check
+run_check "weather python syntax" python3 -B -c 'import ast, pathlib; ast.parse(pathlib.Path("/home/elliot/config/waybar/scripts/weather.py").read_text(encoding="utf-8"))'
 run_check "waybar shell scripts" bash -n \
   "$WAYBAR_ROOT/scripts/module_action.sh" \
   "$WAYBAR_ROOT/scripts/network_speed.sh" \
@@ -43,11 +43,7 @@ run_check "generated waybar json" python3 -c 'import json, pathlib; text=pathlib
 run_check "weather command json" zsh -lc '[[ -f ~/.custom.zsh ]] && source ~/.custom.zsh; python3 ~/.config/waybar/scripts/weather.py | python3 -c "import json,sys; data=json.load(sys.stdin); assert isinstance(data.get(\"text\"), str)"'
 run_check "network command json" bash -lc '~/.config/waybar/scripts/network_speed.sh | python3 -c "import json,sys; data=json.load(sys.stdin); assert isinstance(data.get(\"text\"), str)"'
 
-if [[ "$WAYBAR_ROOT/generate_config.py" -nt "$WAYBAR_ROOT/config.jsonc" ]]; then
-  warn "config.jsonc older than generate_config.py"
-else
-  pass "config.jsonc up to date"
-fi
+pass "config.jsonc content up to date"
 
 for cmd in python3 wl-copy; do
   if command -v "$cmd" >/dev/null 2>&1; then

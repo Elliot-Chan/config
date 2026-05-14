@@ -109,7 +109,8 @@ keymap = [
 	{ on = [ "f","g" ],     run = "plugin fg -- rg",  desc = "find file by content (ripgrep match)" },
 	{ on = [ "f","G" ],     run = "plugin fg",              desc = "find file by content (fuzzy match)" },
 	{ on = [ "f","e" ],     run = "search none",            desc = "Cancel the ongoing search" },
-	{ on = [ "f","z" ],     run = "plugin zoxide",            desc = "Jump to a directory using zoxide" },
+	# zoxide plugin is not installed locally, so keep this disabled to avoid runtime errors.
+	# { on = [ "f","z" ],     run = "plugin zoxide",            desc = "Jump to a directory using zoxide" },
 	{ on = [ "f","f" ],     run = "plugin fg -- fzf",   desc = "Jump to a directory, or reveal a file using fzf" },
 	{ on = [ "f","n" ], 	run = "find --smart",            		 desc = "Find next file" },
 	{ on = [ "f","p" ], 	run = "find --previous --smart", 		 desc = "Find previous file" },
@@ -343,4 +344,3 @@ desc = "Preview images in sxiv"
 # 	shell --confirm 'for path in "$@"; do  echo -en "file://${path}\n"; done |  xclip -i -selection clipboard -rmlastnl -t text/uri-list'
 # ''' ]
 # desc = "clip to x11 clipboard"
-

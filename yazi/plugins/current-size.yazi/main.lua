@@ -10,13 +10,13 @@ end
 local save = ya.sync(function(st, cwd, folder_size)
 	if cx.active.current.cwd == Url(cwd) then
 		st.folder_size = folder_size
-		ya.render()
+		ui.render()
 	end
 end)
 
 local clear_state = ya.sync(function(st)
 	st.folder_size = ""
-	ya.render()
+	ui.render()
 end)
 
 local flush_empty_folder_status = ya.sync(function(st)

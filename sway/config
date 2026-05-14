@@ -1,13 +1,15 @@
 # output * mode 2560x1440@144Hz bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
 #
 focus output HDMI-A-2
-output HDMI-A-2 mode 2560x1440@144Hz bg $HOME/Pictures/background1.jpeg fill
+output HDMI-A-2 mode 2560x1440@144Hz bg $HOME/Pictures/4d46305c-9efa-4db1-9cfd-d926f2655a14.png fill
 output HDMI-A-3 mode 2560x1440@60Hz bg $HOME/Pictures/background4.jpeg fill
 output HDMI-A-3 pos 0 0 res 2560x1440@60Hz transform 90
 output HDMI-A-2 pos 1440 0 res 2560x1440@144Hz
 
 exec "systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE"
 exec swaymsg create_output
+exec_always awww-daemon
+exec_always ~/.local/bin/wallpaper-loop
 #exec fcitx5-remote -r
 exec_always $HOME/config/sway/scripts/vncserver.sh
 output HEADLESS-1 mode 2560x1440@60Hz bg $HOME/Pictures/ly2.png fill

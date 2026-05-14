@@ -58,15 +58,30 @@ source_env_if_present() {
 }
 
 missing_required_env() {
+  local action="${1:-}"
   local missing=""
   for v in GC_OWNER GC_REPO; do
     if [ -z "${!v:-}" ]; then
       missing="${missing}${missing:+, }$v"
     fi
   done
-  if [ -z "${GC_READ_TOKEN:-${GC_WRITE_TOKEN:-}}" ]; then
-    missing="${missing}${missing:+, }GC_READ_TOKEN/GC_WRITE_TOKEN"
-  fi
+  case "$action" in
+  copy | copy-image)
+    if [ -z "${GC_WRITE_TOKEN:-}" ]; then
+      missing="${missing}${missing:+, }GC_WRITE_TOKEN"
+    fi
+    ;;
+  paste | paste-image)
+    if [ -z "${GC_READ_TOKEN:-${GC_WRITE_TOKEN:-}}" ]; then
+      missing="${missing}${missing:+, }GC_READ_TOKEN/GC_WRITE_TOKEN"
+    fi
+    ;;
+  *)
+    if [ -z "${GC_READ_TOKEN:-${GC_WRITE_TOKEN:-}}" ]; then
+      missing="${missing}${missing:+, }GC_READ_TOKEN/GC_WRITE_TOKEN"
+    fi
+    ;;
+  esac
   printf '%s' "$missing"
 }
 
@@ -85,7 +100,7 @@ main() {
   gcclip_bin="$(resolve_gcclip_bin)"
 
   local local_missing
-  local_missing="$(missing_required_env)"
+  local_missing="$(missing_required_env "$action")"
   if [ -n "$local_missing" ]; then
     notify "缺少环境变量: $local_missing (可写入 ~/.config/gcclip.env)"
     {
@@ -97,11 +112,9 @@ main() {
     exit 1
   fi
 
-  require_cmd wl-paste
-  require_cmd wl-copy
-
   case "$action" in
   copy)
+    require_cmd wl-paste
     notify "开始复制"
     {
       echo "[$(date -Is)] copy"
@@ -136,9 +149,7 @@ main() {
     notify "复制成功"
     ;;
   copy-image)
-    require_cmd slurp
-    require_cmd grim
-    notify "框选区域截图"
+    notify "开始上传剪贴板图片"
     {
       echo "[$(date -Is)] copy-image"
       echo "gcclip_bin=$gcclip_bin"
@@ -147,34 +158,14 @@ main() {
       echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-}"
     } >>"$log_file" 2>&1 || true
 
-    local geometry=""
-    if ! geometry="$(slurp 2>>"$log_file")"; then
-      notify "已取消"
-      exit 0
-    fi
-    if [ -z "$geometry" ]; then
-      notify "已取消"
-      exit 0
-    fi
-
-    local img=""
-    img="$(mktemp --suffix=.png)"
-    trap 'rm -f "$img" 2>/dev/null || true' RETURN
-    if ! grim -g "$geometry" "$img" 2>>"$log_file"; then
-      notify "截图失败（详见 $log_file）"
-      exit 1
-    fi
-    if [ ! -s "$img" ]; then
-      notify "截图为空（详见 $log_file）"
-      exit 1
-    fi
-    if ! "$gcclip_bin" copy-image --file "$img" >>"$log_file" 2>&1; then
-      notify "上传失败：gcclip copy-image 失败（详见 $log_file）"
+    if ! "$gcclip_bin" copy-image --from-clipboard >>"$log_file" 2>&1; then
+      notify "上传失败：读取剪贴板图片或 gcclip 上传失败（详见 $log_file）"
       exit 1
     fi
     notify "已上传图片"
     ;;
   paste)
+    require_cmd wl-copy
     notify "开始粘贴"
     {
       echo "[$(date -Is)] paste"
@@ -190,6 +181,7 @@ main() {
     notify "粘贴成功"
     ;;
   paste-image)
+    require_cmd wl-copy
     notify "开始粘贴图片"
     {
       echo "[$(date -Is)] paste-image"

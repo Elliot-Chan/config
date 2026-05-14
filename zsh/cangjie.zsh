@@ -34,6 +34,47 @@ function cangjie::_require_mingw() {
     fi
 }
 
+function cangjie::_validate_mingw_layout() {
+    cangjie::_require_mingw || return 1
+
+    local triplet="x86_64-w64-mingw32"
+    local sysroot="${MINGW_PATH}/${triplet}"
+    local broken_link=""
+
+    [[ -d "${MINGW_PATH}/bin" ]] || { echo "❌ MINGW_PATH/bin missing: ${MINGW_PATH}/bin"; return 1; }
+    [[ -d "${sysroot}/include" ]] || { echo "❌ MinGW include dir missing: ${sysroot}/include"; return 1; }
+    [[ -d "${sysroot}/lib" ]] || { echo "❌ MinGW lib dir missing: ${sysroot}/lib"; return 1; }
+    [[ -x "${MINGW_PATH}/bin/${triplet}-gcc" ]] || { echo "❌ MinGW gcc wrapper missing: ${MINGW_PATH}/bin/${triplet}-gcc"; return 1; }
+    [[ -x "${MINGW_PATH}/bin/${triplet}-g++" ]] || { echo "❌ MinGW g++ wrapper missing: ${MINGW_PATH}/bin/${triplet}-g++"; return 1; }
+    [[ -f "${sysroot}/lib/libpthread.a" ]] || { echo "❌ MinGW pthread import library missing: ${sysroot}/lib/libpthread.a"; return 1; }
+
+    broken_link="$(find -L "${MINGW_PATH}" -type l -print -quit 2>/dev/null || true)"
+    if [[ -n "${broken_link}" ]]; then
+        echo "❌ MINGW_PATH contains broken symlink: ${broken_link}"
+        return 1
+    fi
+}
+
+function cangjie::_check_windows_std_imports() {
+    local time_dll="${WORKSPACE}/cangjie_runtime/stdlib/output/runtime/lib/windows_x86_64_cjnative/libcangjie-std-time.dll"
+    local readobj=""
+
+    [[ -f "${time_dll}" ]] || return 0
+
+    if [[ -x /opt/buildtools/llvm-mingw-w64/bin/llvm-readobj ]]; then
+        readobj=/opt/buildtools/llvm-mingw-w64/bin/llvm-readobj
+    elif command -v llvm-readobj >/dev/null 2>&1; then
+        readobj="$(command -v llvm-readobj)"
+    else
+        return 0
+    fi
+
+    if "${readobj}" --coff-imports "${time_dll}" | grep -q 'clock_gettime64'; then
+        echo "❌ Windows std.time imports clock_gettime64; MINGW_PATH likely does not match the target Windows SDK runtime."
+        return 1
+    fi
+}
+
 function cangjie::_cpu_jobs() {
     local jobs=""
     if command -v nproc >/dev/null 2>&1; then
@@ -47,8 +88,81 @@ function cangjie::_cpu_jobs() {
     echo "${jobs}"
 }
 
+function cangjie::_resolve_stdx_target_triple() {
+    local target_name="$1"
+    case "${target_name}" in
+        native|"") echo "" ;;
+        ohos-aarch64) echo "aarch64-linux-ohos" ;;
+        ohos-arm) echo "arm-linux-ohos" ;;
+        ohos-x86_64) echo "x86_64-linux-ohos" ;;
+        windows-x86_64) echo "x86_64-w64-mingw32" ;;
+        ios-simulator-aarch64) echo "arm64-apple-ios11-simulator" ;;
+        ios-simulator-x86_64) echo "x86_64-apple-ios11-simulator" ;;
+        ios-aarch64) echo "arm64-apple-ios11" ;;
+        android-aarch64) echo "aarch64-linux-android" ;;
+        android31-aarch64) echo "aarch64-linux-android31" ;;
+        android26-aarch64) echo "aarch64-linux-android26" ;;
+        android-x86_64) echo "x86_64-linux-android" ;;
+        android31-x86_64) echo "x86_64-linux-android31" ;;
+        android26-x86_64) echo "x86_64-linux-android26" ;;
+        *) echo "${target_name}" ;;
+    esac
+}
+
+function cangjie::_resolve_stdx_dir_prefix() {
+    local target_name="$1"
+    case "${target_name}" in
+        native|"") echo "${kernel}_${cmake_arch}" ;;
+        ohos-aarch64) echo "linux_ohos_aarch64" ;;
+        ohos-arm) echo "linux_ohos_arm" ;;
+        ohos-x86_64) echo "linux_ohos_x86_64" ;;
+        windows-x86_64) echo "windows_x86_64" ;;
+        ios-simulator-aarch64) echo "darwin_simulator_aarch64" ;;
+        ios-simulator-x86_64) echo "darwin_simulator_x86_64" ;;
+        ios-aarch64) echo "darwin_aarch64" ;;
+        android-aarch64) echo "linux_android_aarch64" ;;
+        android31-aarch64) echo "linux_android31_aarch64" ;;
+        android26-aarch64) echo "linux_android_aarch64" ;;
+        android-x86_64) echo "linux_android_x86_64" ;;
+        android31-x86_64) echo "linux_android31_x86_64" ;;
+        android26-x86_64) echo "linux_android_x86_64" ;;
+        *) echo "${target_name//-/_}" ;;
+    esac
+}
+
+function cangjie::_ensure_android_sdk_layout_compat() {
+    local target_name="$1"
+    local sdk_home="${CANGJIE_HOME:-}"
+    [[ "${target_name}" == android* ]] || return 0
+    [[ -n "${sdk_home}" ]] || return 0
+
+    local expected_prefix=""
+    local sdk_prefix=""
+    case "${target_name}" in
+        android31-aarch64)
+            expected_prefix="linux_android31_aarch64"
+            sdk_prefix="linux_android_aarch64"
+            ;;
+        android31-x86_64)
+            expected_prefix="linux_android31_x86_64"
+            sdk_prefix="linux_android_x86_64"
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+
+    local dir=""
+    for dir in "${sdk_home}/lib" "${sdk_home}/runtime/lib" "${sdk_home}/modules"; do
+        [[ -d "${dir}/${sdk_prefix}_cjnative" ]] || continue
+        [[ -e "${dir}/${expected_prefix}_cjnative" ]] && continue
+        ln -s "${sdk_prefix}_cjnative" "${dir}/${expected_prefix}_cjnative" || return 1
+    done
+}
+
 function cangjie::_run_in_subshell() {
    local task=$1
+   shift
     (
         set -e
         cangjie::_init  # 初始化子Shell环境
@@ -56,15 +170,15 @@ function cangjie::_run_in_subshell() {
         case $task in
             compiler)     cangjie::_build_compiler ;;
             runtime)      cangjie::_build_runtime ;;
-            std)          cangjie::_build_std $2 ;;
-            stdx)         cangjie::_build_stdx $2 ;;
+            std)          cangjie::_build_std "$@" ;;
+            stdx)         cangjie::_build_stdx "$@" ;;
             basic)        cangjie::_build_basic ;;
             tool_lsp)     cangjie::_build_tool_lsp ;;
             tool_cjpm)    cangjie::_build_tool_cjpm ;;
             tool_cjfmt)   cangjie::_build_tool_cjfmt ;;
             tool_hle)     cangjie::_build_tool_hle ;;
             tools)        cangjie::_build_tools ;;
-            ninja)        cangjie::_build_ninja $2 ;;
+            ninja)        cangjie::_build_ninja "$@" ;;
             *)            echo "❌ Unknown build target"; return 1 ;;
         esac
         
@@ -237,6 +351,7 @@ function cangjie::_build_std() {
 function cangjie::_build_std_linux() {
     cd ${WORKSPACE}/cangjie_runtime/stdlib || return 1
     local jobs
+    export CPLUS_INCLUDE_PATH=/usr/lib64/gcc/x86_64-pc-linux-gnu/14.3.1/include/c++:/usr/lib64/gcc/x86_64-pc-linux-gnu/14.3.1/include/c++/x86_64-pc-linux-gnu:/usr/lib64/gcc/x86_64-pc-linux-gnu/14.3.1/include/c++/backward;
     jobs="$(cangjie::_cpu_jobs)"
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
     invoke_exec "python3 build.py build -j ${jobs} -t ${build_type} --target-lib ${WORKSPACE}/cangjie_runtime/runtime/output/ --build-args='-Woff=all' && python3 build.py install"
@@ -247,12 +362,15 @@ function cangjie::_build_std_linux() {
 }
 
 function cangjie::_build_std_windows() {
-    cangjie::_require_mingw || return 1
+    cangjie::_validate_mingw_layout || return 1
     cd ${WORKSPACE}/cangjie_runtime/stdlib || return 1
     local jobs
     jobs="$(cangjie::_cpu_jobs)"
+    unset CPLUS_INCLUDE_PATH
+    export CMAKE_PREFIX_PATH="${MINGW_PATH}/x86_64-w64-mingw32"
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
     invoke_exec "python3 build.py build -j ${jobs} -t ${build_type} --target windows-x86_64 --target-lib=${WORKSPACE}/cangjie_runtime/runtime/target --target-lib=${MINGW_PATH}/x86_64-w64-mingw32/lib --target-sysroot ${MINGW_PATH}/ --target-toolchain ${MINGW_PATH}/bin && python3 build.py install"
+    cangjie::_check_windows_std_imports || return 1
 
     invoke_exec "cp -rf ${WORKSPACE}/cangjie_runtime/stdlib/output/* ${WORKSPACE}/cangjie_compiler/output/"
     invoke_exec "cp -rf ${WORKSPACE}/cangjie_runtime/stdlib/output/* ${WORKSPACE}/cangjie_compiler/output-x86_64-w64-mingw32/"
@@ -261,6 +379,34 @@ function cangjie::_build_std_windows() {
 # 构建STDX扩展库 (子Shell中运行)
 function cangjie::_build_stdx() {
     [[ ${CANGJIE_CONFIG[build_stdx]} != "true" ]] && return
+    local package=""
+    local -a target_args=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --target|--target-sysroot|--target-toolchain)
+                if [[ $# -lt 2 ]]; then
+                    ERROR "$1 requires a value"
+                    return 1
+                fi
+                target_args+=("$1" "$2")
+                shift 2
+                ;;
+            --target=*|--target-sysroot=*|--target-toolchain=*)
+                target_args+=("$1")
+                shift
+                ;;
+            *)
+                if [[ -z "${package}" ]]; then
+                    package="$1"
+                    shift
+                else
+                    ERROR "Unknown stdx build argument: $1"
+                    return 1
+                fi
+                ;;
+        esac
+    done
 
     if [[ -z $(command -v cjc) ]]; then
       ERROR "cjc not found"
@@ -270,14 +416,129 @@ function cangjie::_build_stdx() {
     if cangjie::_is_windows; then
       cangjie::_build_stdx_windows
     else
-      cangjie::_build_stdx_linux "$@"
+      cangjie::_build_stdx_linux "${package}" "${target_args[@]}"
     fi
 }
 
 function cangjie::_build_stdx_linux() {
     local package=$1
+    shift
+    local -a target_args=("$@")
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
-    local modules_dir=${install_dir}/modules/linux_x86_64_cjnative/stdx
+    local target_name=""
+    local target_sysroot=""
+    local target_toolchain=""
+    local openssl_include=""
+    local openssl_lib=""
+    local artifact_triple="${kernel}_${cmake_arch}"
+    local target_dir_prefix="${kernel}_${cmake_arch}"
+    local modules_dir=""
+    local android_ndk_sysroot="/opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+    local android_ndk_toolchain="/opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
+    local android_openssl_root=""
+
+    local i=1
+    while [[ $i -le ${#target_args} ]]; do
+        case "${target_args[$i]}" in
+            --target)
+                (( i + 1 <= ${#target_args} )) && target_name="${target_args[$((i + 1))]}"
+                (( i += 2 ))
+                ;;
+            --target=*)
+                target_name="${target_args[$i]#--target=}"
+                (( i += 1 ))
+                ;;
+            --target-sysroot)
+                (( i + 1 <= ${#target_args} )) && target_sysroot="${target_args[$((i + 1))]}"
+                (( i += 2 ))
+                ;;
+            --target-sysroot=*)
+                target_sysroot="${target_args[$i]#--target-sysroot=}"
+                (( i += 1 ))
+                ;;
+            --target-toolchain)
+                (( i + 1 <= ${#target_args} )) && target_toolchain="${target_args[$((i + 1))]}"
+                (( i += 2 ))
+                ;;
+            --target-toolchain=*)
+                target_toolchain="${target_args[$i]#--target-toolchain=}"
+                (( i += 1 ))
+                ;;
+            --include|-I)
+                (( i + 1 <= ${#target_args} )) && openssl_include="${target_args[$((i + 1))]}"
+                (( i += 2 ))
+                ;;
+            --include=*|-I=*)
+                openssl_include="${target_args[$i]#*=}"
+                (( i += 1 ))
+                ;;
+            --target-lib|-L)
+                (( i + 1 <= ${#target_args} )) && openssl_lib="${target_args[$((i + 1))]}"
+                (( i += 2 ))
+                ;;
+            --target-lib=*|-L=*)
+                openssl_lib="${target_args[$i]#*=}"
+                (( i += 1 ))
+                ;;
+            *)
+                (( i += 1 ))
+                ;;
+        esac
+    done
+
+    if [[ -n "${target_name}" ]]; then
+        local resolved_target
+        resolved_target="$(cangjie::_resolve_stdx_target_triple "${target_name}")"
+        artifact_triple="${resolved_target//-/_}"
+        target_dir_prefix="$(cangjie::_resolve_stdx_dir_prefix "${target_name}")"
+    fi
+
+    if [[ "${target_name}" == android* ]]; then
+        case "${target_name}" in
+            android-aarch64|android26-aarch64|android31-aarch64)
+                android_openssl_root="/opt/android-libs/aarch64"
+                ;;
+            android-x86_64|android26-x86_64|android31-x86_64)
+                android_openssl_root="/opt/android-libs/x86_64"
+                ;;
+        esac
+        if [[ -z "${target_sysroot}" ]]; then
+            target_args+=("--target-sysroot" "${android_ndk_sysroot}")
+        fi
+        if [[ -z "${target_toolchain}" ]]; then
+            target_args+=("--target-toolchain" "${android_ndk_toolchain}")
+        fi
+        if [[ -z "${openssl_include}" || -z "${openssl_lib}" ]]; then
+            local openssl_root="${OPENSSL_ROOT_DIR:-${android_openssl_root}}"
+            if [[ -z "${openssl_root}" ]]; then
+                ERROR "Android stdx build requires OPENSSL_ROOT_DIR to point to an installed Android OpenSSL root"
+                ERROR "Expected at least: \$OPENSSL_ROOT_DIR/include/openssl/crypto.h and \$OPENSSL_ROOT_DIR/lib"
+                return 1
+            fi
+            if [[ -z "${openssl_include}" ]]; then
+                if [[ -f "${openssl_root}/include/openssl/crypto.h" ]]; then
+                    target_args+=("--include" "${openssl_root}/include")
+                else
+                    ERROR "Missing OpenSSL headers: ${openssl_root}/include/openssl/crypto.h"
+                    return 1
+                fi
+            fi
+            if [[ -z "${openssl_lib}" ]]; then
+                if [[ -d "${openssl_root}/lib" ]]; then
+                    target_args+=("--target-lib" "${openssl_root}/lib")
+                elif [[ -d "${openssl_root}/lib64" ]]; then
+                    target_args+=("--target-lib" "${openssl_root}/lib64")
+                else
+                    ERROR "Missing OpenSSL lib directory under ${openssl_root} (expected lib or lib64)"
+                    return 1
+                fi
+            fi
+        fi
+    fi
+
+    cangjie::_ensure_android_sdk_layout_compat "${target_name}" || return 1
+
+    modules_dir="${install_dir}/modules/${target_dir_prefix}_cjnative/stdx"
     if [[ -n "$package" ]]; then
       cd ${WORKSPACE}/cangjie_stdx/build_temp/build || return 1
       ninja $package && ninja install 
@@ -285,14 +546,19 @@ function cangjie::_build_stdx_linux() {
       echo "🚀 Building Cangjie STDX Extension..."
       cd ${WORKSPACE}/cangjie_stdx || return 1
       [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
-      invoke_exec "python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include && python3 build.py install --prefix ${install_dir}" || return -1
-      echo "🎉 Install stdx to ${install_dir}/${kernel}_${cmake_arch}_cjnative/{dynamic/static}/stdx"
+      local build_cmd="python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include"
+      if (( ${#target_args[@]} > 0 )); then
+        build_cmd+=" ${target_args[*]}"
+      fi
+      build_cmd+=" && python3 build.py install --prefix ${install_dir}"
+      invoke_exec "${build_cmd}" || return -1
+      echo "🎉 Install stdx to ${install_dir}/${target_dir_prefix}_cjnative/{dynamic/static}/stdx"
       # cp -rf ${install_dir}/${kernel}_${cmake_arch}_cjnative/**/dynamic/**/**.{cjo,bc} $modules_dir
       # mv -f $modules_dir/{libstdx.bc,stdx.cjo} $modules_dir/../
     fi
-    set CANGJIE_STDX_DYNAMIC_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/dynamic/stdx
-    set CANGJIE_STDX_DYNAMIC_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/static/stdx
-    set CANGJIE_STDX_PATH = ${install_dir}/${kernel}_${cmake_arch}_cjnative/\{dynamic/static\}/stdx
+    set CANGJIE_STDX_DYNAMIC_PATH = ${install_dir}/${target_dir_prefix}_cjnative/dynamic/stdx
+    set CANGJIE_STDX_DYNAMIC_PATH = ${install_dir}/${target_dir_prefix}_cjnative/static/stdx
+    set CANGJIE_STDX_PATH = ${install_dir}/${target_dir_prefix}_cjnative/\{dynamic/static\}/stdx
 }
 
 function cangjie::_build_stdx_windows() {
@@ -301,7 +567,6 @@ function cangjie::_build_stdx_windows() {
     cd ${WORKSPACE}/cangjie_stdx || return 1
     [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
     invoke_exec "python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include --target-lib=${MINGW_PATH}/x86_64-w64-mingw32/lib --target windows-x86_64 --target-sysroot ${MINGW_PATH}/ --target-toolchain ${MINGW_PATH}/bin && python3 build.py install" || return -1
-    export CANGJIE_STDX_PATH="${WORKSPACE}/cangjie_stdx/target/windows_x86_64_cjnative/static/stdx"
 }
 
 # 构建工具集 (子Shell中运行)
@@ -442,10 +707,32 @@ function cangjie::_build_tools() {
     cangjie::_build_tool_hle
 }
 
+function cangjie::build_all() {
+    echo "🚀 Building configured Cangjie components..."
+
+    if [[ ${CANGJIE_CONFIG[build_compiler]} == "true" ]]; then
+        cangjie::_run_in_subshell compiler || return
+    fi
+    if [[ ${CANGJIE_CONFIG[build_runtime]} == "true" ]]; then
+        cangjie::_run_in_subshell runtime || return
+    fi
+    if [[ ${CANGJIE_CONFIG[build_std]} == "true" ]]; then
+        cangjie::_run_in_subshell std || return
+    fi
+    if [[ ${CANGJIE_CONFIG[build_stdx]} == "true" ]]; then
+        cangjie::_run_in_subshell stdx || return
+    fi
+    if [[ ${CANGJIE_CONFIG[build_tools]} == "true" ]]; then
+        cangjie::_run_in_subshell tools || return
+    fi
+}
+
 # 公开构建命令（主Shell接口）
 function cangjie::build() {
-    local target=$1
-    shift 1
+    local target="${1:-}"
+    if [[ $# -gt 0 ]]; then
+        shift 1
+    fi
     if [[ -z "$target" ]]; then
         cangjie::build_all
         return
@@ -455,11 +742,11 @@ function cangjie::build() {
         all)      cangjie::build_all ;;
         compiler) cangjie::_run_in_subshell compiler ;;
         runtime)  cangjie::_run_in_subshell runtime ;;
-        std)      cangjie::_run_in_subshell std $@ ;;
-        stdx)     cangjie::_run_in_subshell stdx $@ ;;
+        std)      cangjie::_run_in_subshell std "$@" ;;
+        stdx)     cangjie::_run_in_subshell stdx "$@" ;;
 	      lsp)	  cangjie::_run_in_subshell tool_lsp ;;
         tools)    cangjie::_run_in_subshell tools ;;
-        ninja)    cangjie::_run_in_subshell ninja $@ ;;
+        ninja)    cangjie::_run_in_subshell ninja "$@" ;;
         *)
             echo "Available build targets:"
             echo "  all       - Build all components (default)"
@@ -687,6 +974,7 @@ function cjh {
     -lstdx.net
     -lstdx.logger
     -lstdx.log
+    -lstdx.compress.tar
     -lstdx.encoding.url
     -lstdx.encoding.json.stream
     -lstdx.crypto.keys
@@ -736,6 +1024,15 @@ $'  CJ_SDK_LIBPATH: extra runtime lib path injected into LD_LIBRARY_PATH when ru
       -o) (( i++ )); output="${argv[i]:-}" ;;
       -l) (( i++ )); libNames+=("${argv[i]:-}") ;;
       -L) (( i++ )); libDirs+=("${argv[i]:-}") ;;
+      --link-option)
+        linkExtra+=("${argv[i]}")
+        (( i++ ))
+        if (( i > $#argv )); then
+          ERROR "[cjh] --link-option 缺少参数"
+          return 2
+        fi
+        linkExtra+=("${argv[i]}")
+        ;;
       --)
         runArgs=("${argv[@]:i+1}")
         break

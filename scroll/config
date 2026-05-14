@@ -1,0 +1,21 @@
+focus output HDMI-A-2
+output HDMI-A-2 mode 2560x1440@144Hz bg $HOME/Pictures/background1.jpeg fill
+output HDMI-A-3 mode 2560x1440@60Hz bg $HOME/Pictures/background4.jpeg fill
+output HDMI-A-3 pos 0 0 res 2560x1440@60Hz transform 90
+output HDMI-A-2 pos 1440 0 res 2560x1440@144Hz
+
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+exec "systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE"
+exec fcitx5-remote -r
+exec_always --no-startup-id sh -c 'pgrep -f "$HOME/.config/scroll/scripts/vncserver.sh" >/dev/null || "$HOME/.config/scroll/scripts/vncserver.sh"'
+exec python3 $HOME/.local/share/pr-monitor/pr_monitor_daemon.py daemon
+
+
+exec scrollmsg create_output
+output HEADLESS-1 mode 2560x1440@60Hz bg $HOME/Pictures/ly2.png fill
+
+include $HOME/.config/scroll/config.d/*
+
+input * {
+    scroll_factor 1
+}

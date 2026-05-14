@@ -17,6 +17,7 @@ mkdir -p "$(dirname "$DST")"
 cp -f "$SRC" "$DST"
 
 if command -v swaync-client >/dev/null 2>&1; then
+  swaync-client -R >/dev/null 2>&1 || true
   swaync-client -rs >/dev/null 2>&1 || true
 fi
 

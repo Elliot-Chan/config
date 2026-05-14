@@ -1,3 +1,20 @@
 waybar/.qweather_private_key
 waybar/.qweather_token
 .secrets.zsh
+
+# Generated/runtime state.
+__pycache__/
+*.py[cod]
+.codex
+**/.codex
+**/.codex/
+*~
+.*.swp
+.DS_Store
+
+# Local backup files created by editor/config tooling.
+*.bak
+yazi/keymap.toml-*
+yazi/theme.toml-*
+yazi/yazi.toml-*
+zsh/~/

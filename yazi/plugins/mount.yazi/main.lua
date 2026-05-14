@@ -5,7 +5,7 @@ local toggle_ui = ya.sync(function(self)
 	else
 		self.children = Modal:children_add(self, 10)
 	end
-	ya.render()
+	ui.render()
 end)
 
 local subscribe = ya.sync(function(self)
@@ -18,13 +18,13 @@ local update_partitions = ya.sync(function(self, partitions)
 	self.title = "Mount"
 	self.title_color = "#82ab3a"
 	self.cursor = math.max(0, math.min(self.cursor or 0, #self.partitions - 1))
-	ya.render()
+	ui.render()
 end)
 
 local set_pending_status = ya.sync(function(self)
 	self.title_color = "#d9734b"
 	self.title = "Pending..."
-	ya.render()
+	ui.render()
 end)
 
 local active_partition = ya.sync(function(self) return self.partitions[self.cursor + 1] end)
@@ -35,7 +35,7 @@ local update_cursor = ya.sync(function(self, cursor)
 	else
 		self.cursor = ya.clamp(0, self.cursor + cursor, #self.partitions - 1)
 	end
-	ya.render()
+	ui.render()
 end)
 
 local M = {

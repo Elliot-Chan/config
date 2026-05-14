@@ -72,3 +72,22 @@ github = "ael-code/zsh-colored-man-pages"
 # [plugins.base16]
 # github = "chriskempson/base16-shell"
 #
+[plugins.gitbutler]
+github = "batuhan0sanli/gitbutler-omz"
+
+[plugins.clean-history]
+git = "https://github.com/Automaat/zsh-clean-history"
+
+[plugins.git-prune]
+git = "https://github.com/diazod/git-prune"
+
+[plugins.mkcd]
+git = "https://github.com/azizoid/zsh-mkcd"
+
+[plugins.zsh-autosuggestions]
+github = "zsh-users/zsh-autosuggestions"
+use = ["{{ name }}.zsh"]
+
+[plugins.smart-suggestion]
+github = "yetone/smart-suggestion"
+use = ["smart-suggestion.plugin.zsh"]

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+import argparse
 import copy
 import json
+import sys
 from pathlib import Path
 
 
@@ -16,7 +18,7 @@ def clone(value):
 def base_bar(output, modules_left, modules_center, modules_right, extra=None):
     bar = {
         "height": 30,
-        "spacing": 4,
+        "spacing": 0,
         "output": output,
         "modules-left": modules_left,
         "modules-center": modules_center,
@@ -137,6 +139,38 @@ UPDATES = {
     "exec": "waybar-module-pacman-updates --interval-seconds 5 --network-interval-seconds 300",
 }
 
+LAUNCHER = {
+    "format": "",
+    "tooltip": True,
+    "tooltip-format": "应用菜单\n左键: 打开应用\n右键: 打开终端工具",
+    "on-click": "wofi --show drun --allow-images --insensitive -w 2 -L 20",
+    "on-click-right": "~/.config/waybar/scripts/open_terminal_tool.sh btop",
+}
+
+MIHOMO_CHATGPT = {
+    "exec": "~/.config/waybar/scripts/mihomo-chatgpt-node.sh",
+    "return-type": "json",
+    "interval": 10,
+    "format": "{}",
+    "tooltip": True,
+}
+
+DISK_PRIMARY = {
+    "path": "/",
+    "format": "󰋊 {percentage_used}%",
+    "states": {
+        "warning": 70,
+        "critical": 90,
+    },
+}
+
+DISK_SIMPLE = {
+    "path": "/",
+    "interval": 30,
+    "format": "{percentage_used}% ",
+    "tooltip": True,
+}
+
 NETWORK_SPEED = {
     "tooltip": True,
     "exec": "~/.config/waybar/scripts/network_speed.sh",
@@ -157,6 +191,14 @@ GCCLIP = {
     "on-click": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy'",
     "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy-image'",
     "on-click-right": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh paste'",
+}
+
+SCREENSHOT = {
+    "format": "",
+    "tooltip": True,
+    "tooltip-format": "截图\n左键: 框选区域到剪贴板\n中键: 框选区域上传 GCClip",
+    "on-click": "bash -lc '$HOME/.config/waybar/scripts/screenshot_waybar.sh area-copy'",
+    "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/screenshot_waybar.sh area-upload'",
 }
 
 MEDIA = {
@@ -231,6 +273,7 @@ def primary_bar():
     bar = base_bar(
         output="HDMI-A-2",
         modules_left=[
+            "custom/launcher",
             "sway/workspaces",
             "sway/mode",
             "sway/scratchpad",
@@ -238,13 +281,16 @@ def primary_bar():
         ],
         modules_center=["sway/window"],
         modules_right=[
-            "mpd",
             "custom/weather",
             "custom/network_speed",
-            "custom/gcclip",
+            "custom/mihomo-chatgpt",
             "cpu",
             "memory",
+            "disk",
+            "custom/gcclip",
+            "custom/screenshot",
             "custom/notification",
+            "mpd",
             "clock",
             "tray",
             "custom/updates",
@@ -254,6 +300,7 @@ def primary_bar():
     bar.update(
         {
             "sway/window": clone(WINDOW),
+            "custom/launcher": clone(LAUNCHER),
             "sway/workspaces": clone(WORKSPACES_PRIMARY),
             "sway/mode": clone(MODE),
             "sway/scratchpad": clone(SCRATCHPAD),
@@ -261,14 +308,17 @@ def primary_bar():
             "tray": clone(TRAY),
             "clock": clone(CLOCK),
             "custom/updates": clone(UPDATES),
+            "custom/mihomo-chatgpt": clone(MIHOMO_CHATGPT),
             "custom/weather": clone(WEATHER),
             "cpu": clone(CPU_WITH_STATES),
             "memory": clone(MEMORY),
             "custom/network_speed": clone(NETWORK_SPEED),
             "custom/gcclip": clone(GCCLIP),
+            "custom/screenshot": clone(SCREENSHOT),
             "custom/media": clone(MEDIA),
             "custom/power": clone(POWER),
             "custom/notification": clone(NOTIFICATION),
+            "disk": clone(DISK_PRIMARY),
         }
     )
     return bar
@@ -278,6 +328,7 @@ def bottom_bar():
     bar = base_bar(
         output="HDMI-A-3",
         modules_left=[
+            "custom/launcher",
             "sway/workspaces",
             "sway/scratchpad",
         ],
@@ -286,6 +337,7 @@ def bottom_bar():
             "custom/weather",
             "cpu",
             "custom/gcclip",
+            "custom/screenshot",
             "custom/notification",
             "custom/clock",
         ],
@@ -294,6 +346,7 @@ def bottom_bar():
     bar.update(
         {
             "sway/window": clone(WINDOW),
+            "custom/launcher": clone(LAUNCHER),
             "sway/workspaces": clone(WORKSPACES_SHARED),
             "sway/mode": clone(MODE),
             "sway/scratchpad": clone(SCRATCHPAD),
@@ -301,7 +354,9 @@ def bottom_bar():
             "custom/weather": clone(WEATHER),
             "cpu": clone(CPU_SIMPLE),
             "custom/gcclip": clone(GCCLIP),
+            "custom/screenshot": clone(SCREENSHOT),
             "custom/notification": clone(NOTIFICATION),
+            "disk": clone(DISK_SIMPLE),
         }
     )
     return bar
@@ -311,6 +366,7 @@ def headless_bar():
     bar = base_bar(
         output="HEADLESS-1",
         modules_left=[
+            "custom/launcher",
             "sway/workspaces",
             "sway/mode",
             "sway/scratchpad",
@@ -319,9 +375,10 @@ def headless_bar():
         modules_center=["sway/window"],
         modules_right=[
             "custom/network_speed",
-            "custom/gcclip",
             "cpu",
             "memory",
+            "custom/gcclip",
+            "custom/screenshot",
             "clock",
             "tray",
         ],
@@ -329,15 +386,18 @@ def headless_bar():
     bar.update(
         {
             "sway/window": clone(WINDOW),
+            "custom/launcher": clone(LAUNCHER),
             "sway/workspaces": clone(WORKSPACES_SHARED),
             "sway/mode": clone(MODE),
             "sway/scratchpad": clone(SCRATCHPAD),
+            "disk": clone(DISK_SIMPLE),
             "tray": clone(TRAY),
             "clock": clone(CLOCK),
             "cpu": clone(CPU_WITH_STATES),
             "memory": clone(MEMORY),
             "custom/network_speed": clone(NETWORK_SPEED),
             "custom/gcclip": clone(GCCLIP),
+            "custom/screenshot": clone(SCREENSHOT),
             "custom/media": clone(MEDIA),
         }
     )
@@ -355,9 +415,39 @@ def render():
     ) + "\n"
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="check that config.jsonc matches generated output without writing it",
+    )
+    parser.add_argument(
+        "--stdout",
+        action="store_true",
+        help="print generated config instead of writing config.jsonc",
+    )
+    return parser.parse_args()
+
+
 def main():
-    OUTPUT.write_text(render(), encoding="utf-8")
+    args = parse_args()
+    rendered = render()
+
+    if args.stdout:
+        print(rendered, end="")
+        return
+
+    if args.check:
+        current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
+        if current != rendered:
+            print(f"{OUTPUT} is not up to date", file=sys.stderr)
+            return 1
+        return 0
+
+    OUTPUT.write_text(rendered, encoding="utf-8")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

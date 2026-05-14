@@ -36,7 +36,7 @@ run_check "yazi helper scripts" bash -n \
   "$ROOT/yazi/scripts/video_to_gif.sh" \
   "$ROOT/yazi/scripts/yazi-copy-path.sh" \
   "$ROOT/yazi/scripts/yazi-open-here.sh"
-run_check "waybar generator" python3 "$ROOT/waybar/generate_config.py"
+run_check "waybar generator" python3 "$ROOT/waybar/generate_config.py" --check
 run_check "swaync json" python3 -c 'import json; json.load(open("/home/elliot/.config/swaync/config.json"))'
 run_check "waybar config json" python3 -c 'import json, pathlib; text=pathlib.Path("/home/elliot/config/waybar/config.jsonc").read_text(encoding="utf-8"); json.loads(text.split("\n", 1)[1])'
 run_check "wezterm lua" lua -e 'assert(loadfile("/home/elliot/config/wezterm/config/bindings.lua")); assert(loadfile("/home/elliot/config/wezterm/config/projects.lua"))'

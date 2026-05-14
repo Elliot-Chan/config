@@ -2,9 +2,10 @@
 [
   {
     "height": 30,
-    "spacing": 4,
+    "spacing": 0,
     "output": "HDMI-A-2",
     "modules-left": [
+      "custom/launcher",
       "sway/workspaces",
       "sway/mode",
       "sway/scratchpad",
@@ -14,13 +15,16 @@
       "sway/window"
     ],
     "modules-right": [
-      "mpd",
       "custom/weather",
       "custom/network_speed",
-      "custom/gcclip",
+      "custom/mihomo-chatgpt",
       "cpu",
       "memory",
+      "disk",
+      "custom/gcclip",
+      "custom/screenshot",
       "custom/notification",
+      "mpd",
       "clock",
       "tray",
       "custom/updates",
@@ -35,6 +39,13 @@
         "(.*) - nvim": "  $1",
         "WEZTERM_DIR(.*)": "📂 $1"
       }
+    },
+    "custom/launcher": {
+      "format": "",
+      "tooltip": true,
+      "tooltip-format": "应用菜单\n左键: 打开应用\n右键: 打开终端工具",
+      "on-click": "wofi --show drun --allow-images --insensitive -w 2 -L 20",
+      "on-click-right": "~/.config/waybar/scripts/open_terminal_tool.sh btop"
     },
     "sway/workspaces": {
       "disable-scroll": true,
@@ -98,6 +109,13 @@
       "exec-if": "which waybar-module-pacman-updates",
       "exec": "waybar-module-pacman-updates --interval-seconds 5 --network-interval-seconds 300"
     },
+    "custom/mihomo-chatgpt": {
+      "exec": "~/.config/waybar/scripts/mihomo-chatgpt-node.sh",
+      "return-type": "json",
+      "interval": 10,
+      "format": "{}",
+      "tooltip": true
+    },
     "custom/weather": {
       "interval": 3600,
       "format": "{} ",
@@ -149,6 +167,13 @@
       "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy-image'",
       "on-click-right": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh paste'"
     },
+    "custom/screenshot": {
+      "format": "",
+      "tooltip": true,
+      "tooltip-format": "截图\n左键: 框选区域到剪贴板\n中键: 框选区域上传 GCClip",
+      "on-click": "bash -lc '$HOME/.config/waybar/scripts/screenshot_waybar.sh area-copy'",
+      "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/screenshot_waybar.sh area-upload'"
+    },
     "custom/media": {
       "format": "{icon} {text}",
       "return-type": "json",
@@ -186,13 +211,22 @@
       "on-click-middle": "swaync-client -C",
       "on-click-right": "swaync-client -d -sw",
       "escape": true
+    },
+    "disk": {
+      "path": "/",
+      "format": "󰋊 {percentage_used}%",
+      "states": {
+        "warning": 70,
+        "critical": 90
+      }
     }
   },
   {
     "height": 30,
-    "spacing": 4,
+    "spacing": 0,
     "output": "HDMI-A-3",
     "modules-left": [
+      "custom/launcher",
       "sway/workspaces",
       "sway/scratchpad"
     ],
@@ -203,6 +237,7 @@
       "custom/weather",
       "cpu",
       "custom/gcclip",
+      "custom/screenshot",
       "custom/notification",
       "custom/clock"
     ],
@@ -216,6 +251,13 @@
         "(.*) - nvim": "  $1",
         "WEZTERM_DIR(.*)": "📂 $1"
       }
+    },
+    "custom/launcher": {
+      "format": "",
+      "tooltip": true,
+      "tooltip-format": "应用菜单\n左键: 打开应用\n右键: 打开终端工具",
+      "on-click": "wofi --show drun --allow-images --insensitive -w 2 -L 20",
+      "on-click-right": "~/.config/waybar/scripts/open_terminal_tool.sh btop"
     },
     "sway/workspaces": {
       "disable-scroll": true,
@@ -273,6 +315,13 @@
       "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy-image'",
       "on-click-right": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh paste'"
     },
+    "custom/screenshot": {
+      "format": "",
+      "tooltip": true,
+      "tooltip-format": "截图\n左键: 框选区域到剪贴板\n中键: 框选区域上传 GCClip",
+      "on-click": "bash -lc '$HOME/.config/waybar/scripts/screenshot_waybar.sh area-copy'",
+      "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/screenshot_waybar.sh area-upload'"
+    },
     "custom/notification": {
       "tooltip": false,
       "format": "{icon}",
@@ -293,13 +342,20 @@
       "on-click-middle": "swaync-client -C",
       "on-click-right": "swaync-client -d -sw",
       "escape": true
+    },
+    "disk": {
+      "path": "/",
+      "interval": 30,
+      "format": "{percentage_used}% ",
+      "tooltip": true
     }
   },
   {
     "height": 30,
-    "spacing": 4,
+    "spacing": 0,
     "output": "HEADLESS-1",
     "modules-left": [
+      "custom/launcher",
       "sway/workspaces",
       "sway/mode",
       "sway/scratchpad",
@@ -310,9 +366,10 @@
     ],
     "modules-right": [
       "custom/network_speed",
-      "custom/gcclip",
       "cpu",
       "memory",
+      "custom/gcclip",
+      "custom/screenshot",
       "clock",
       "tray"
     ],
@@ -325,6 +382,13 @@
         "(.*) - nvim": "  $1",
         "WEZTERM_DIR(.*)": "📂 $1"
       }
+    },
+    "custom/launcher": {
+      "format": "",
+      "tooltip": true,
+      "tooltip-format": "应用菜单\n左键: 打开应用\n右键: 打开终端工具",
+      "on-click": "wofi --show drun --allow-images --insensitive -w 2 -L 20",
+      "on-click-right": "~/.config/waybar/scripts/open_terminal_tool.sh btop"
     },
     "sway/workspaces": {
       "disable-scroll": true,
@@ -349,6 +413,12 @@
       ],
       "tooltip": true,
       "tooltip-format": "{app}: {title}"
+    },
+    "disk": {
+      "path": "/",
+      "interval": 30,
+      "format": "{percentage_used}% ",
+      "tooltip": true
     },
     "tray": {
       "spacing": 10
@@ -394,6 +464,13 @@
       "on-click": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy'",
       "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh copy-image'",
       "on-click-right": "bash -lc '$HOME/.config/waybar/scripts/gcclip_waybar.sh paste'"
+    },
+    "custom/screenshot": {
+      "format": "",
+      "tooltip": true,
+      "tooltip-format": "截图\n左键: 框选区域到剪贴板\n中键: 框选区域上传 GCClip",
+      "on-click": "bash -lc '$HOME/.config/waybar/scripts/screenshot_waybar.sh area-copy'",
+      "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/screenshot_waybar.sh area-upload'"
     },
     "custom/media": {
       "format": "{icon} {text}",

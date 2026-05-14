@@ -146,6 +146,13 @@ source $HOME/.config/zsh/custom.zsh
 [[ -f $HOME/.custom.zsh ]] && source $HOME/.custom.zsh
 [[ -f /usr/share/doc/git-extras/git-extras-completion.zsh ]] && source /usr/share/doc/git-extras/git-extras-completion.zsh
 
+function _config_disable_jump_hooks() {
+  [[ -n "${DISABLE_ZOXIDE:-}" ]] || \
+    [[ -n "${CODEX_CI:-}" ]] || \
+    [[ -n "${CODEX_THREAD_ID:-}" ]] || \
+    [[ -n "${CODEX_SANDBOX_NETWORK_DISABLED:-}" ]]
+}
+
 zstyle ':completion:*:cd:*' ignore-parents true
 compdef -d cd
 export _ZO_FZF_OPTS="
@@ -156,12 +163,24 @@ export FZF_ALT_C_OPTS="
   --preview 'exa -al --tree --level 1 --group-directories-first --git-ignore --header --git --no-user --no-time --no-filesize --no-permissions {}'
   --preview-window=right,50%
 "
-eval "$(zoxide init zsh)"
-alias zz='zi'
+if ! _config_disable_jump_hooks; then
+  eval "$(zoxide init zsh)"
+  alias zz='zi'
+fi
 
 
 fpath=($HOME/.zsh-complete $fpath)
-command -v sheldon >/dev/null 2>&1 && eval "$(sheldon source)"
+if command -v sheldon >/dev/null 2>&1; then
+  if _config_disable_jump_hooks; then
+    eval "$(sheldon source | sed '/wting\/autojump/d;/autojump\/bin/d')"
+  else
+    eval "$(sheldon source)"
+  fi
+fi
+zle -N _do_smart_suggestion
+bindkey '^O' _do_smart_suggestion
+bindkey -M emacs '^O' _do_smart_suggestion
+bindkey -M viins '^O' _do_smart_suggestion
 alias vim="nvim"
 alias yay="paru"
 alias fda='fd -I'

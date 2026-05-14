@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+pick_ipc() {
+  if command -v scrollmsg >/dev/null 2>&1 && scrollmsg -t get_tree >/dev/null 2>&1; then
+    echo scrollmsg
+    return 0
+  fi
+
+  if command -v swaymsg >/dev/null 2>&1 && swaymsg -t get_tree >/dev/null 2>&1; then
+    echo swaymsg
+    return 0
+  fi
+
+  echo "missing working scrollmsg/swaymsg IPC command" >&2
+  return 1
+}
+
+IPC_CMD="$(pick_ipc)"
+$HOME/.config/scroll/scripts/autoname.sh || true
+
+"$IPC_CMD" -m -t subscribe '["window","workspace"]' | while read -r _; do
+  $HOME/.config/scroll/scripts/autoname.sh || true
+done

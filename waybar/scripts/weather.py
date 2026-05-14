@@ -9,7 +9,6 @@ from pathlib import Path
 import jwt
 import requests
 
-
 # 配置参数
 API_HOST = os.getenv("QWEATHER_API_HOST", "nn3qqqaj4u.re.qweatherapi.com")
 LOCATION_ID = os.getenv("QWEATHER_LOCATION", "118.77,31.97")
@@ -210,6 +209,7 @@ def load_api_token():
 
     return ""
 
+
 def get_weather(endpoint):
     """获取天气信息"""
     api_token = load_api_token()
@@ -220,11 +220,11 @@ def get_weather(endpoint):
     url = f"https://{API_HOST}/v7/weather/{endpoint}?location={LOCATION_ID}"
     headers = {
         "Authorization": f"Bearer {api_token}",
-        "Accept-Encoding": "gzip"  # 支持压缩
+        "Accept-Encoding": "gzip",  # 支持压缩
     }
 
     try:
-        response = requests.get(url, headers=headers, timeout=30)
+        response = requests.get(url, headers=headers, timeout=30, verify=False)
         response.raise_for_status()  # 如果响应状态码不是200，抛出异常
         data = response.json()
         return data
@@ -234,6 +234,7 @@ def get_weather(endpoint):
     except json.JSONDecodeError as e:
         debug_log(f"json: {e}")
         return None
+
 
 def build_sparkline(values, width=12, symbols="▁▂▃▄▅▆▇█"):
     if not values:
@@ -258,22 +259,22 @@ def build_sparkline(values, width=12, symbols="▁▂▃▄▅▆▇█"):
 
 
 def format_weather_output(data, hourly_data=None):
-    now = data.get('now', {})
+    now = data.get("now", {})
     if not now:
         return None
-        
-    icon_code = now.get('icon', '999')
-    temp = now.get('temp', 'N/A')
-    text = now.get('text', 'N/A')
-    
+
+    icon_code = now.get("icon", "999")
+    temp = now.get("temp", "N/A")
+    text = now.get("text", "N/A")
+
     icon, category, intensity, is_extreme = classify_weather(icon_code, text)
-    
+
     # 可以添加更多信息到tooltip
-    feels_like = now.get('feelsLike', 'N/A')
-    humidity = now.get('humidity', 'N/A')
-    wind_scale = now.get('windScale', 'N/A')
-    wind_dir = now.get('windDir', 'N/A')
-    
+    feels_like = now.get("feelsLike", "N/A")
+    humidity = now.get("humidity", "N/A")
+    wind_scale = now.get("windScale", "N/A")
+    wind_dir = now.get("windDir", "N/A")
+
     hourly_temps = []
     if hourly_data:
         for item in hourly_data.get("hourly", []):
@@ -298,8 +299,8 @@ def format_weather_output(data, hourly_data=None):
 天气: {text}
 湿度: {humidity}%
 风力: {wind_scale}级 {wind_dir}
-更新时间: {data.get('updateTime', 'N/A')}"""
-    
+更新时间: {data.get("updateTime", "N/A")}"""
+
     # 返回Waybar JSON格式
     classes = ["weather", f"weather-{category}"]
     if intensity:
@@ -310,9 +311,9 @@ def format_weather_output(data, hourly_data=None):
     waybar_json = {
         "text": f"{icon} {text}" if mode == "text" else f"{icon} {temp}°C",
         "tooltip": tooltip,
-        "class": " ".join(classes)
+        "class": " ".join(classes),
     }
-    
+
     # 根据温度设置不同的class（用于CSS样式）
     try:
         temp_num = float(temp)
@@ -325,6 +326,7 @@ def format_weather_output(data, hourly_data=None):
     waybar_json["class"] = " ".join(classes)
     return waybar_json
 
+
 def main():
     data = get_weather("now")
     hourly_data = get_weather("24h")
@@ -333,11 +335,11 @@ def main():
         error_output = {
             "text": "❌ 天气获取失败",
             "tooltip": "请检查网络连接、TLS 证书，以及 QWEATHER_API_TOKEN 或 JWT 配置（QWEATHER_KID/QWEATHER_SUB/私钥文件）",
-            "class": "weather-error"
+            "class": "weather-error",
         }
         print(json.dumps(error_output))
         return
-    
+
     output = format_weather_output(data, hourly_data)
     if output:
         print(json.dumps(output))
@@ -345,8 +347,9 @@ def main():
         error_output = {
             "text": "❌ 数据解析失败",
             "tooltip": "天气数据格式不正确",
-            "class": "weather-error"
+            "class": "weather-error",
         }
         print(json.dumps(error_output))
+
 
 main()

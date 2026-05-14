@@ -66,7 +66,6 @@ wezterm.on('format-window-title', function(tab, pane, tabs, panes, config)
    if title == nil or title == '' then
       title = tab.active_pane.title
    end
-   wezterm.log_error(title)
    if title:sub(1, 1) == '@' then
       return title:sub(2)
    end

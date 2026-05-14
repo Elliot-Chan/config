@@ -2,6 +2,7 @@ export ENHANCD_FILTER="fzf --preview 'exa -al --tree --level 1 --group-directori
 
 export FZF_DEFAULT_OPTS='--height 75% --multi --reverse --margin=0,1 --bind ctrl-f:page-down,ctrl-b:page-up,ctrl-/:toggle-preview --bind pgdn:preview-page-down,pgup:preview-page-up --marker="✚" --pointer="▶" --prompt="❯ " --no-separator --scrollbar="█" --color bg+:#262626,fg+:#dadada,hl:#f09479,hl+:#f09479 --color border:#303030,info:#cfcfb0,header:#80a0ff,spinner:#36c692 --color prompt:#87afff,pointer:#ff5189,marker:#f09479'
 
+
 [[ -f "$HOME/.secrets.zsh" ]] && source "$HOME/.secrets.zsh"
 
 function setProxy() {
@@ -79,3 +80,23 @@ function swaync-mode() {
 if is_wsl; then
   source wsl_custom.zsh
 fi
+
+function getSdk() {
+  TOKEN=$(get_token.py) get_sdk.py $@
+}
+
+# Auto-clean on shell exit (default: false); runs in background, non-blocking
+# Failures are logged to ~/.zsh_history_cleanup.log
+ZSH_CLEAN_HISTORY_AUTO_CLEAN=true
+
+# Similarity threshold 0..1 (default: 0.8)
+ZSH_CLEAN_HISTORY_SIMILARITY=0.85
+
+# Max weighted score considered "rare" (default: 3.0).
+# Uses time-decay weights: 1.0 for <7d, 0.5 for 8-30d, 0.1 for 31d+.
+ZSH_CLEAN_HISTORY_RARE_THRESHOLD=2.0
+
+# Override binary location (default: search PATH, then plugin's target/)
+# ZSH_CLEAN_HISTORY_BIN=/path/to/zsh-clean-history
+#
+export SMART_SUGGESTION_AI_PROVIDER="deepseek"
