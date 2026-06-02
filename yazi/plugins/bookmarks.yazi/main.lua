@@ -63,8 +63,8 @@ local load_file_to_state = ya.sync(function(state,filename)
 	end
 
 	for line in file:lines() do
-		line = line:gsub("[\r\n]", "")
-		local bookmark = string_split(line,"###")
+		local cleaned = line:gsub("[\r\n]", "")
+		local bookmark = string_split(cleaned,"###")
 		if bookmark == nil or #bookmark < 4 then
 			goto nextline
 		end

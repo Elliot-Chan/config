@@ -7,12 +7,22 @@ if [[ $# -eq 0 ]]; then
   exit 1
 fi
 
-if command -v wezterm >/dev/null 2>&1; then
-  exec wezterm start --always-new-process -- "$@"
+ghostty_launcher="${GHOSTTY_LAUNCHER:-$HOME/config/ghostty/scripts/launch.sh}"
+if [[ -x "$ghostty_launcher" ]]; then
+  exec "$ghostty_launcher" "$@"
+fi
+
+kitty_launcher="${XDG_CONFIG_HOME:-$HOME/.config}/kitty/scripts/launch.sh"
+if [[ -x "$kitty_launcher" ]]; then
+  exec "$kitty_launcher" --detach "$@"
 fi
 
 if command -v kitty >/dev/null 2>&1; then
-  exec kitty --detach "$@"
+  LIBGL_ALWAYS_SOFTWARE="${LIBGL_ALWAYS_SOFTWARE:-1}" exec kitty --detach "$@"
+fi
+
+if command -v wezterm >/dev/null 2>&1; then
+  exec wezterm start --always-new-process -- "$@"
 fi
 
 if command -v notify-send >/dev/null 2>&1; then

@@ -91,3 +91,6 @@ use = ["{{ name }}.zsh"]
 [plugins.smart-suggestion]
 github = "yetone/smart-suggestion"
 use = ["smart-suggestion.plugin.zsh"]
+
+[plugins.uv]
+github = "matthiasha/zsh-uv-env"

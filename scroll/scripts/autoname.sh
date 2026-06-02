@@ -46,9 +46,9 @@ RULES=(
   # 你 toml 里的浏览器/工具（app_id 规则）
   'app:google-chrome|Google-chrome|Chromium => '
   'app:firefox|Nightly|firefoxdeveloperedition => '
-  'app:kitty|org.wezfurlong.wezterm|foot|Alacritty => '
+  'app:com[.]elliot[.]ghostty[.]bottom|bottom-terminal => '
+  'app:com[.]mitchellh[.]ghostty|com[.]elliot[.]ghostty[.]dropdown|kitty|org.wezfurlong.wezterm|foot|Alacritty => '
   'app:code|Code|code-oss => '
-  'app:bottom-terminal => '
   'app:org.gnome.Nautilus|eog => '
 )
 
@@ -91,17 +91,18 @@ pick_label_for_ws() {
       | select(.type?=="workspace" and .name==$ws)
       | .. | objects
       | select(.type?=="con" or .type?=="floating_con")
-      | select((.app_id? // "") != "" or (.name? // "") != "")
-      | {app_id:(.app_id // ""), title:(.name // "")}
+      | select((.app_id? // "") != "" or (.window_properties.class? // "") != "" or (.name? // "") != "")
+      | {app_id:(.app_id // ""), class:(.window_properties.class // ""), title:(.name // "")}
     ' <<<"$tree_json"
   )
 
   local -a labels=()
 
   # 对每个窗口：按 RULES 顺序找第一条命中
-  local w app title line lhs rhs kind re matched
+  local w app class title line lhs rhs kind re matched
   for w in "${wins[@]}"; do
     app="$(jq -r '.app_id' <<<"$w")"
+    class="$(jq -r '.class' <<<"$w")"
     title="$(jq -r '.title' <<<"$w")"
 
     matched=""
@@ -114,8 +115,9 @@ pick_label_for_ws() {
 
       case "$kind" in
       app)
-        # app_id 用 regex 匹配（你原来就是这么写的）
-        if jq -e --arg s "$app" --arg re "$re" '($s|test($re))' >/dev/null <<<"null"; then
+        # Wayland uses app_id, Xwayland uses window class.
+        if jq -e --arg app "$app" --arg class "$class" --arg re "$re" \
+          '($app|test($re)) or ($class|test($re))' >/dev/null <<<"null"; then
           matched="$rhs"
         fi
         ;;

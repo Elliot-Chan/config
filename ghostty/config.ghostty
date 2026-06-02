@@ -1,0 +1,115 @@
+# Core
+command = zsh -l
+term = xterm-ghostty
+shell-integration = detect
+shell-integration-features = cursor,title,path
+gtk-single-instance = false
+confirm-close-surface = false
+quit-after-last-window-closed = true
+
+# Fonts
+font-family = "Maple Mono Normal NL CN"
+font-family = "FiraCode Nerd Font"
+font-family = "JetBrainsMono Nerd Font"
+font-family = "Noto Color Emoji"
+font-size = 14
+
+# Appearance
+theme = Catppuccin Mocha
+background-opacity = 0.90
+background-blur-radius = 30
+macos-titlebar-style = transparent
+window-padding-x = 10
+window-padding-y = 8
+window-save-state = always
+window-theme = auto
+
+# background-opacity = 0.85
+window-decoration = false
+gtk-titlebar = false
+gtk-tabs-location = top
+gtk-titlebar-style = tabs
+gtk-toolbar-style = flat
+gtk-wide-tabs = false
+gtk-custom-css = /home/elliot/config/ghostty/gtk.css
+window-padding-x = 8
+window-padding-y = 4
+# cursor-style = block
+# cursor-style-blink = true
+unfocused-split-opacity = 1
+
+# Scrolling and selection
+scrollback-limit = 20000000
+mouse-scroll-multiplier = precision:1,discrete:5
+copy-on-select = false
+clipboard-trim-trailing-spaces = true
+link-url = true
+
+# Basic
+keybind = f1=write_scrollback_file:open,plain
+keybind = f2=toggle_command_palette
+keybind = f11=toggle_fullscreen
+keybind = alt+f=start_search
+keybind = ctrl+shift+c=copy_to_clipboard:mixed
+keybind = ctrl+shift+v=paste_from_clipboard
+keybind = alt+backspace=text:"\x15"
+
+# Tabs
+keybind = alt+t=new_tab
+keybind = ctrl+alt+t=new_tab
+keybind = ctrl+alt+w=close_tab:this
+keybind = ctrl+alt+1=goto_tab:1
+keybind = ctrl+alt+2=goto_tab:2
+keybind = ctrl+alt+3=goto_tab:3
+keybind = ctrl+alt+4=goto_tab:4
+keybind = ctrl+alt+5=goto_tab:5
+keybind = ctrl+alt+6=goto_tab:6
+keybind = ctrl+alt+7=goto_tab:7
+keybind = ctrl+alt+8=goto_tab:8
+keybind = ctrl+alt+9=goto_tab:9
+keybind = ctrl+alt+0=goto_tab:10
+keybind = alt+[=previous_tab
+keybind = alt+]=next_tab
+keybind = alt+,=previous_tab
+keybind = alt+.=next_tab
+keybind = ctrl+alt+[=move_tab:-1
+keybind = ctrl+alt+]=move_tab:1
+keybind = ctrl+alt+,=move_tab:-1
+keybind = ctrl+alt+.=move_tab:1
+keybind = alt+0=prompt_tab_title
+keybind = ctrl+alt+r=prompt_tab_title
+keybind = alt+9=toggle_tab_overview
+
+# Windows
+keybind = alt+n=new_window
+keybind = alt+shift+n=new_window
+keybind = alt+-=resize_split:left,10
+keybind = alt+==resize_split:right,10
+
+# Splits
+keybind = alt+backslash=new_split:right
+keybind = alt+/=new_split:down
+keybind = alt+enter=toggle_split_zoom
+keybind = alt+w=close_surface
+keybind = ctrl+alt+k=goto_split:up
+keybind = ctrl+alt+j=goto_split:down
+keybind = ctrl+alt+h=goto_split:left
+keybind = ctrl+alt+l=goto_split:right
+keybind = ctrl+alt+p=goto_split:previous
+keybind = alt+u=scroll_page_lines:-1
+keybind = alt+d=scroll_page_lines:1
+keybind = page_up=scroll_page_up
+keybind = page_down=scroll_page_down
+
+# Resize panes
+keybind = ctrl+alt+shift+k=resize_split:up,10
+keybind = ctrl+alt+shift+j=resize_split:down,10
+keybind = ctrl+alt+shift+h=resize_split:left,10
+keybind = ctrl+alt+shift+l=resize_split:right,10
+keybind = ctrl+alt+shift+equal=increase_font_size:1
+keybind = ctrl+alt+shift+minus=decrease_font_size:1
+keybind = ctrl+alt+shift+0=reset_font_size
+
+# Sessions
+keybind = ctrl+alt+s=reload_config
+keybind = ctrl+alt+c=new_window

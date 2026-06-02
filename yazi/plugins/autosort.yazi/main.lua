@@ -264,8 +264,8 @@ return {
 			local file = io.open(cache_path, "r")
 			if file then 
 				for line in file:lines() do
-					line = line:gsub("[\r\n]", "")
-					local autosort = string_split(line,"###")
+					local cleaned = line:gsub("[\r\n]", "")
+					local autosort = string_split(cleaned,"###")
 					if autosort == nil or #autosort < 4 then
 						goto nextline
 					end

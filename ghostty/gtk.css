@@ -1,0 +1,102 @@
+headerbar,
+.titlebar,
+tabbar {
+  background: #181825;
+  box-shadow: none;
+  border: 0;
+  border-bottom: 1px solid rgba(88, 91, 112, 0.45);
+}
+
+headerbar windowcontrols,
+.titlebar windowcontrols {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+headerbar windowcontrols button,
+.titlebar windowcontrols button {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+tabbar {
+  padding: 2px 6px 0;
+}
+
+tabbar tab {
+  min-height: 28px;
+  margin: 2px 3px;
+  padding: 0 10px;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: #a6adc8;
+  transition: background 120ms ease-out, color 120ms ease-out;
+}
+
+tabbar tab:hover {
+  background: rgba(205, 214, 244, 0.08);
+  color: #cdd6f4;
+}
+
+tabbar tab:selected {
+  background: #313244;
+  color: #cdd6f4;
+}
+
+tabbar tab label {
+  font-weight: 500;
+}
+
+tabbar tab:selected label {
+  font-weight: 700;
+}
+
+tabbar button,
+tabbar .close,
+tabbar .close-button,
+tabbar .tab-close-button,
+tabbar image,
+tabbar tab image,
+tabbar tabbox button,
+tabbar tabbox tab button,
+tabbar tabbox tab image,
+tabbar tab > box > button,
+tabbar tab > box > image,
+tabbar tab button {
+  min-width: 0;
+  min-height: 0;
+  max-width: 0;
+  max-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+  opacity: 0;
+  color: transparent;
+  -gtk-icon-size: 0px;
+}
+
+tabbar button:hover,
+tabbar .close:hover,
+tabbar .close-button:hover,
+tabbar .tab-close-button:hover,
+tabbar tabbox button:hover,
+tabbar tabbox tab button:hover,
+tabbar tab > box > button:hover,
+tabbar tab button:hover {
+  background: transparent;
+  color: transparent;
+  opacity: 0;
+}
+
+tabbar tab separator {
+  opacity: 0;
+}

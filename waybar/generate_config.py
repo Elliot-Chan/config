@@ -17,7 +17,7 @@ def clone(value):
 
 def base_bar(output, modules_left, modules_center, modules_right, extra=None):
     bar = {
-        "height": 30,
+        "height": 43,
         "spacing": 0,
         "output": output,
         "modules-left": modules_left,
@@ -155,6 +155,38 @@ MIHOMO_CHATGPT = {
     "tooltip": True,
 }
 
+SERVICE_STATUS = {
+    "exec": "~/.config/waybar/scripts/service_status.sh",
+    "return-type": "json",
+    "interval": 10,
+    "format": "{}",
+    "tooltip": True,
+    "escape": False,
+}
+
+AI_USAGE = {
+    "exec": "zsh -lc '[[ -f ~/.zshrc ]] && source ~/.zshrc >/dev/null 2>&1; python3 ~/.config/waybar/scripts/ai_usage.py'",
+    "return-type": "json",
+    "interval": 300,
+    "signal": 10,
+    "format": "{}",
+    "tooltip": True,
+    "escape": False,
+    "on-click": f"{ACTION_SCRIPT} ai-usage-details",
+    "on-click-middle": f"{ACTION_SCRIPT} ai-usage-refresh",
+    "on-click-right": f"{ACTION_SCRIPT} ai-usage-refresh",
+}
+
+PR_STATUS = {
+    "exec": "zsh -lc '[[ -f ~/.zshrc ]] && source ~/.zshrc >/dev/null 2>&1; python3 ~/.config/waybar/scripts/pr_status.py'",
+    "return-type": "json",
+    "interval": 15,
+    "signal": 11,
+    "format": "{}",
+    "tooltip": True,
+    "escape": False,
+}
+
 DISK_PRIMARY = {
     "path": "/",
     "format": "󰋊 {percentage_used}%",
@@ -174,7 +206,7 @@ DISK_SIMPLE = {
 NETWORK_SPEED = {
     "tooltip": True,
     "exec": "~/.config/waybar/scripts/network_speed.sh",
-    "interval": 1,
+    "interval": 2,
     "signal": 9,
     "format": "{}",
     "format-alt": "{}",
@@ -199,18 +231,6 @@ SCREENSHOT = {
     "tooltip-format": "截图\n左键: 框选区域到剪贴板\n中键: 框选区域上传 GCClip",
     "on-click": "bash -lc '$HOME/.config/waybar/scripts/screenshot_waybar.sh area-copy'",
     "on-click-middle": "bash -lc '$HOME/.config/waybar/scripts/screenshot_waybar.sh area-upload'",
-}
-
-MEDIA = {
-    "format": "{icon} {text}",
-    "return-type": "json",
-    "max-length": 40,
-    "format-icons": {
-        "spotify": "",
-        "default": "🎜",
-    },
-    "escape": True,
-    "exec": "$HOME/.config/waybar/mediaplayer.py 2> /dev/null",
 }
 
 POWER = {
@@ -274,10 +294,11 @@ def primary_bar():
         output="HDMI-A-2",
         modules_left=[
             "custom/launcher",
+            "custom/service_status",
+            "custom/pr_status",
             "sway/workspaces",
             "sway/mode",
             "sway/scratchpad",
-            "custom/media",
         ],
         modules_center=["sway/window"],
         modules_right=[
@@ -309,13 +330,14 @@ def primary_bar():
             "clock": clone(CLOCK),
             "custom/updates": clone(UPDATES),
             "custom/mihomo-chatgpt": clone(MIHOMO_CHATGPT),
+            "custom/service_status": clone(SERVICE_STATUS),
+            "custom/pr_status": clone(PR_STATUS),
             "custom/weather": clone(WEATHER),
             "cpu": clone(CPU_WITH_STATES),
             "memory": clone(MEMORY),
             "custom/network_speed": clone(NETWORK_SPEED),
             "custom/gcclip": clone(GCCLIP),
             "custom/screenshot": clone(SCREENSHOT),
-            "custom/media": clone(MEDIA),
             "custom/power": clone(POWER),
             "custom/notification": clone(NOTIFICATION),
             "disk": clone(DISK_PRIMARY),
@@ -329,6 +351,8 @@ def bottom_bar():
         output="HDMI-A-3",
         modules_left=[
             "custom/launcher",
+            "custom/service_status",
+            "custom/pr_status",
             "sway/workspaces",
             "sway/scratchpad",
         ],
@@ -352,6 +376,8 @@ def bottom_bar():
             "sway/scratchpad": clone(SCRATCHPAD),
             "custom/clock": clone(CUSTOM_CLOCK),
             "custom/weather": clone(WEATHER),
+            "custom/service_status": clone(SERVICE_STATUS),
+            "custom/pr_status": clone(PR_STATUS),
             "cpu": clone(CPU_SIMPLE),
             "custom/gcclip": clone(GCCLIP),
             "custom/screenshot": clone(SCREENSHOT),
@@ -362,15 +388,32 @@ def bottom_bar():
     return bar
 
 
+def side_ai_bar():
+    bar = base_bar(
+        output="HDMI-A-3",
+        modules_left=[],
+        modules_center=["custom/ai_usage"],
+        modules_right=[],
+        extra={"height": 34, "position": "top"},
+    )
+    bar.update(
+        {
+            "custom/ai_usage": clone(AI_USAGE),
+        }
+    )
+    return bar
+
+
 def headless_bar():
     bar = base_bar(
         output="HEADLESS-1",
         modules_left=[
             "custom/launcher",
+            "custom/service_status",
+            "custom/pr_status",
             "sway/workspaces",
             "sway/mode",
             "sway/scratchpad",
-            "custom/media",
         ],
         modules_center=["sway/window"],
         modules_right=[
@@ -396,9 +439,10 @@ def headless_bar():
             "cpu": clone(CPU_WITH_STATES),
             "memory": clone(MEMORY),
             "custom/network_speed": clone(NETWORK_SPEED),
+            "custom/service_status": clone(SERVICE_STATUS),
+            "custom/pr_status": clone(PR_STATUS),
             "custom/gcclip": clone(GCCLIP),
             "custom/screenshot": clone(SCREENSHOT),
-            "custom/media": clone(MEDIA),
         }
     )
     return bar
@@ -408,6 +452,7 @@ def render():
     bars = [
         primary_bar(),
         bottom_bar(),
+        side_ai_bar(),
         headless_bar(),
     ]
     return "// Generated by waybar/generate_config.py\n" + json.dumps(

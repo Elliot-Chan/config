@@ -16,7 +16,7 @@ notify() {
 
 refresh_signal() {
   local signal=$1
-  pkill "-RTMIN+${signal}" waybar
+  pkill -x --signal "RTMIN+${signal}" waybar
 }
 
 ensure_cache_dir() {
@@ -111,6 +111,105 @@ action_network_toggle_mode() {
   notify "Waybar" "Network mode: ${next_mode}"
 }
 
+action_ai_usage_refresh() {
+  refresh_signal 10
+  notify "Waybar" "AI usage refresh requested"
+}
+
+action_ai_usage_details() {
+  local detail_file
+  local detail_lines
+  detail_file="${CACHE_DIR}/ai_usage_detail_wofi.txt"
+  ensure_cache_dir
+
+  if [[ ! -s "$detail_file" ]]; then
+    printf "<span color='#cba6f7' weight='bold'>󰚩  AI Usage</span>\n<span color='#a6adc8'>No cached snapshot yet. Middle click to refresh.</span>\n" > "$detail_file"
+    zsh -lc '[[ -f ~/.zshrc ]] && source ~/.zshrc >/dev/null 2>&1; python3 ~/.config/waybar/scripts/ai_usage.py >/dev/null' >/dev/null 2>&1 &
+  fi
+
+  detail_lines=$(wc -l < "$detail_file")
+  if ((detail_lines < 8)); then
+    detail_lines=8
+  elif ((detail_lines > 26)); then
+    detail_lines=26
+  fi
+
+  if command -v wofi >/dev/null 2>&1; then
+    setsid -f sh -c '
+      wofi \
+        --dmenu \
+        --gtk-dark \
+        --hide-search \
+        --hide-scroll \
+        --allow-markup \
+        --no-custom-entry \
+        --parse-search \
+        --cache-file=/dev/null \
+        --style="$HOME/.config/waybar/scripts/ai_usage_wofi.css" \
+        --prompt="AI Usage" \
+        --width=840 \
+        --lines="$2" \
+        --monitor=HDMI-A-3 \
+        --location=top \
+        --xoffset=0 \
+        --yoffset=44 \
+        < "$1" >/dev/null 2>&1
+    ' sh "$detail_file" "$detail_lines"
+    return 0
+  fi
+
+  detail_file="${CACHE_DIR}/ai_usage_detail.txt"
+  if [[ ! -s "$detail_file" ]]; then
+    if ! zsh -lc '[[ -f ~/.zshrc ]] && source ~/.zshrc >/dev/null 2>&1; python3 ~/.config/waybar/scripts/ai_usage.py --detail' >"$detail_file"; then
+      notify "Waybar" "AI usage detail failed"
+      return 1
+    fi
+  fi
+
+  if command -v wezterm >/dev/null 2>&1; then
+    setsid -f wezterm \
+      --config initial_cols=100 \
+      --config initial_rows=34 \
+      start \
+      --always-new-process \
+      --class WaybarAIUsage \
+      -- zsh -lc '[[ -f ~/.zshrc ]] && source ~/.zshrc >/dev/null 2>&1; clear; python3 ~/.config/waybar/scripts/ai_usage.py --detail-ansi; printf "\n"; IFS= read -r _' \
+      >/dev/null 2>&1
+    return 0
+  fi
+
+  detail_file="${CACHE_DIR}/ai_usage_detail.html"
+
+  if ! zsh -lc '[[ -f ~/.zshrc ]] && source ~/.zshrc >/dev/null 2>&1; python3 ~/.config/waybar/scripts/ai_usage.py --detail-html' >"$detail_file"; then
+    notify "Waybar" "AI usage detail failed"
+    return 1
+  fi
+
+  if command -v chromium >/dev/null 2>&1 && chromium --version >/dev/null 2>&1; then
+    setsid -f chromium \
+      --user-data-dir="${XDG_RUNTIME_DIR:-/tmp}/waybar-ai-usage-chromium" \
+      --new-window \
+      --app="file://${detail_file}" \
+      --window-size=820,760 \
+      --class=WaybarAIUsage \
+      >/dev/null 2>&1
+    return 0
+  fi
+
+  if ! command -v zenity >/dev/null 2>&1; then
+    notify "Waybar" "No popup viewer found"
+    return 1
+  fi
+
+  zenity \
+    --text-info \
+    --title="AI Usage" \
+    --filename="$detail_file" \
+    --font="monospace" \
+    --width=820 \
+    --height=760
+}
+
 case "${1:-}" in
   weather-refresh)
     action_weather_refresh
@@ -129,6 +228,12 @@ case "${1:-}" in
     ;;
   network-toggle-mode)
     action_network_toggle_mode
+    ;;
+  ai-usage-refresh)
+    action_ai_usage_refresh
+    ;;
+  ai-usage-details)
+    action_ai_usage_details
     ;;
   *)
     notify "Waybar" "Unknown action: ${1:-missing}"

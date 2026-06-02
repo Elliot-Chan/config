@@ -25,7 +25,7 @@ folder = [
   { run = 'zeditor  "$@"', orphan = true, desc = "zed", for = "linux" },
   { run = '''zsh -c "lazygit -p "$1""''', block = true, desc = "lazygit", for = "linux" },
   { run = '~/.config/yazi/scripts/archive_selected.sh "$@"', orphan = true, desc = "archive", for = "linux" },
-  { run = '~/.config/yazi/scripts/yazi-open-here.sh wezterm "$1"', orphan = true, desc = "wezterm here", for = "linux" },
+  { run = '~/.config/yazi/scripts/yazi-open-here.sh ghostty "$1"', orphan = true, desc = "ghostty here", for = "linux" },
   { run = '~/.config/yazi/scripts/yazi-open-here.sh nvim "$1"', orphan = true, desc = "nvim here", for = "linux" },
 
 ]

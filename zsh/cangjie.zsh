@@ -10,6 +10,10 @@ typeset -gA CANGJIE_CONFIG=(
     [kernel]="linux"
     [cmake_arch]="x86_64"
     [mingw_path]="${MINGW_PATH}"
+    [ohos_tools_path]="$HOME/share/commandline-tools-6.0.2"
+    [ohos_openssl_include]=""
+    [ohos_openssl_lib]=""
+    [ohos_stdx_build_type]="release"
     [build_compiler]="true"
     [build_runtime]="true"
     [build_std]="true"
@@ -91,9 +95,11 @@ function cangjie::_cpu_jobs() {
 function cangjie::_resolve_stdx_target_triple() {
     local target_name="$1"
     case "${target_name}" in
+        ohos) echo "aarch64-linux-ohos" ;;
         native|"") echo "" ;;
         ohos-aarch64) echo "aarch64-linux-ohos" ;;
         ohos-arm) echo "arm-linux-ohos" ;;
+        ohos-x64) echo "x86_64-linux-ohos" ;;
         ohos-x86_64) echo "x86_64-linux-ohos" ;;
         windows-x86_64) echo "x86_64-w64-mingw32" ;;
         ios-simulator-aarch64) echo "arm64-apple-ios11-simulator" ;;
@@ -112,9 +118,11 @@ function cangjie::_resolve_stdx_target_triple() {
 function cangjie::_resolve_stdx_dir_prefix() {
     local target_name="$1"
     case "${target_name}" in
+        ohos) echo "linux_ohos_aarch64" ;;
         native|"") echo "${kernel}_${cmake_arch}" ;;
         ohos-aarch64) echo "linux_ohos_aarch64" ;;
         ohos-arm) echo "linux_ohos_arm" ;;
+        ohos-x64) echo "linux_ohos_x86_64" ;;
         ohos-x86_64) echo "linux_ohos_x86_64" ;;
         windows-x86_64) echo "windows_x86_64" ;;
         ios-simulator-aarch64) echo "darwin_simulator_aarch64" ;;
@@ -128,6 +136,80 @@ function cangjie::_resolve_stdx_dir_prefix() {
         android26-x86_64) echo "linux_android_x86_64" ;;
         *) echo "${target_name//-/_}" ;;
     esac
+}
+
+function cangjie::_normalize_stdx_target_name() {
+    local target_name="$1"
+    case "${target_name}" in
+        ohos) echo "ohos-aarch64" ;;
+        ohos-x64) echo "ohos-x86_64" ;;
+        *) echo "${target_name}" ;;
+    esac
+}
+
+function cangjie::_is_stdx_target_name() {
+    case "$1" in
+        native|ohos|ohos-aarch64|ohos-arm|ohos-x64|ohos-x86_64|windows-x86_64|ios-simulator-aarch64|ios-simulator-x86_64|ios-aarch64|android-aarch64|android31-aarch64|android26-aarch64|android23-arm|android-x86_64|android31-x86_64|android26-x86_64)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+function cangjie::_ohos_native_home() {
+    local tools_path="${CANGJIE_CONFIG[ohos_tools_path]:-$HOME/share/commandline-tools-6.0.2}"
+    echo "${tools_path}/sdk/default/openharmony/native"
+}
+
+function cangjie::_validate_ohos_native_layout() {
+    local native_home="$1"
+    [[ -d "${native_home}" ]] || { echo "❌ OHOS native SDK missing: ${native_home}"; return 1; }
+    [[ -x "${native_home}/llvm/bin/clang" ]] || { echo "❌ OHOS clang missing: ${native_home}/llvm/bin/clang"; return 1; }
+    [[ -x "${native_home}/llvm/bin/clang++" ]] || { echo "❌ OHOS clang++ missing: ${native_home}/llvm/bin/clang++"; return 1; }
+    [[ -d "${native_home}/sysroot" ]] || { echo "❌ OHOS sysroot missing: ${native_home}/sysroot"; return 1; }
+}
+
+function cangjie::_ohos_openssl_include() {
+    local target_name="$1"
+    local configured="${CANGJIE_CONFIG[ohos_openssl_include]:-${OPENSSL_INCLUDE_DIR:-}}"
+
+    if [[ -n "${configured}" ]]; then
+        echo "${configured}"
+        return 0
+    fi
+
+    case "${target_name}" in
+        ohos|ohos-aarch64) echo "/opt/android-libs/aarch64/include" ;;
+        ohos-x64|ohos-x86_64) echo "/opt/android-libs/x86_64/include" ;;
+        ohos-arm) echo "/opt/android-libs/arm/include" ;;
+        *) echo "" ;;
+    esac
+}
+
+function cangjie::_ohos_openssl_lib() {
+    local target_name="$1"
+    local configured="${CANGJIE_CONFIG[ohos_openssl_lib]:-${OPENSSL_PATH:-}}"
+
+    if [[ -n "${configured}" ]]; then
+        echo "${configured}"
+        return 0
+    fi
+
+    case "${target_name}" in
+        ohos|ohos-aarch64) echo "/opt/android-libs/aarch64/lib" ;;
+        ohos-x64|ohos-x86_64) echo "/opt/android-libs/x86_64/lib" ;;
+        ohos-arm) echo "/opt/android-libs/arm/lib" ;;
+        *) echo "" ;;
+    esac
+}
+
+function cangjie::_has_openssl_lib() {
+    local lib_dir="$1"
+    [[ -n "${lib_dir}" ]] || return 1
+    [[ -f "${lib_dir}/libcrypto.a" || -f "${lib_dir}/libcrypto.so" ]] || return 1
+    [[ -f "${lib_dir}/libssl.a" || -f "${lib_dir}/libssl.so" ]] || return 1
 }
 
 function cangjie::_ensure_android_sdk_layout_compat() {
@@ -381,23 +463,47 @@ function cangjie::_build_stdx() {
     [[ ${CANGJIE_CONFIG[build_stdx]} != "true" ]] && return
     local package=""
     local -a target_args=()
+    local stdx_build_type=""
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --target|--target-sysroot|--target-toolchain)
+            --build-type|-t)
                 if [[ $# -lt 2 ]]; then
                     ERROR "$1 requires a value"
                     return 1
                 fi
-                target_args+=("$1" "$2")
+                stdx_build_type="$2"
                 shift 2
                 ;;
-            --target=*|--target-sysroot=*|--target-toolchain=*)
+            --build-type=*|-t=*)
+                stdx_build_type="${1#*=}"
+                shift
+                ;;
+            --target|--target-sysroot|--target-toolchain|--include|-I|--target-lib|-L)
+                if [[ $# -lt 2 ]]; then
+                    ERROR "$1 requires a value"
+                    return 1
+                fi
+                if [[ "$1" == "--target" ]]; then
+                    target_args+=("$1" "$(cangjie::_normalize_stdx_target_name "$2")")
+                else
+                    target_args+=("$1" "$2")
+                fi
+                shift 2
+                ;;
+            --target=*)
+                target_args+=("--target=$(cangjie::_normalize_stdx_target_name "${1#--target=}")")
+                shift
+                ;;
+            --target-sysroot=*|--target-toolchain=*|--include=*|-I=*|--target-lib=*|-L=*)
                 target_args+=("$1")
                 shift
                 ;;
             *)
-                if [[ -z "${package}" ]]; then
+                if [[ -z "${package}" ]] && cangjie::_is_stdx_target_name "$1"; then
+                    target_args+=("--target" "$(cangjie::_normalize_stdx_target_name "$1")")
+                    shift
+                elif [[ -z "${package}" ]]; then
                     package="$1"
                     shift
                 else
@@ -416,13 +522,14 @@ function cangjie::_build_stdx() {
     if cangjie::_is_windows; then
       cangjie::_build_stdx_windows
     else
-      cangjie::_build_stdx_linux "${package}" "${target_args[@]}"
+      cangjie::_build_stdx_linux "${package}" "${stdx_build_type}" "${target_args[@]}"
     fi
 }
 
 function cangjie::_build_stdx_linux() {
     local package=$1
-    shift
+    local stdx_build_type=$2
+    shift 2
     local -a target_args=("$@")
     local install_dir="${cangjie_sdk_path}/${kernel}_${build_type}_${cmake_arch}"
     local target_name=""
@@ -430,12 +537,15 @@ function cangjie::_build_stdx_linux() {
     local target_toolchain=""
     local openssl_include=""
     local openssl_lib=""
+    local has_openssl_lib="false"
     local artifact_triple="${kernel}_${cmake_arch}"
     local target_dir_prefix="${kernel}_${cmake_arch}"
     local modules_dir=""
     local android_ndk_sysroot="/opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
     local android_ndk_toolchain="/opt/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
     local android_openssl_root=""
+    local ohos_native_home=""
+    local effective_build_type="${stdx_build_type:-${build_type}}"
 
     local i=1
     while [[ $i -le ${#target_args} ]]; do
@@ -473,11 +583,15 @@ function cangjie::_build_stdx_linux() {
                 (( i += 1 ))
                 ;;
             --target-lib|-L)
-                (( i + 1 <= ${#target_args} )) && openssl_lib="${target_args[$((i + 1))]}"
+                if (( i + 1 <= ${#target_args} )); then
+                    openssl_lib="${target_args[$((i + 1))]}"
+                    cangjie::_has_openssl_lib "${openssl_lib}" && has_openssl_lib="true"
+                fi
                 (( i += 2 ))
                 ;;
             --target-lib=*|-L=*)
                 openssl_lib="${target_args[$i]#*=}"
+                cangjie::_has_openssl_lib "${openssl_lib}" && has_openssl_lib="true"
                 (( i += 1 ))
                 ;;
             *)
@@ -536,6 +650,47 @@ function cangjie::_build_stdx_linux() {
         fi
     fi
 
+    if [[ "${target_name}" == ohos* ]]; then
+        ohos_native_home="$(cangjie::_ohos_native_home)"
+        cangjie::_validate_ohos_native_layout "${ohos_native_home}" || return 1
+        resolved_target="$(cangjie::_resolve_stdx_target_triple "${target_name}")"
+        export DEVECO_OH_NATIVE_HOME="${ohos_native_home}"
+        effective_build_type="${stdx_build_type:-${CANGJIE_CONFIG[ohos_stdx_build_type]:-${build_type}}}"
+        if [[ -z "${target_sysroot}" ]]; then
+            target_args+=("--target-sysroot" "${ohos_native_home}/sysroot")
+        fi
+        if [[ -z "${target_toolchain}" ]]; then
+            target_args+=("--target-toolchain" "${ohos_native_home}/llvm/bin")
+        fi
+        if [[ -d "${ohos_native_home}/sysroot/usr/lib/${resolved_target}" ]]; then
+            target_args+=("--target-lib" "${ohos_native_home}/sysroot/usr/lib/${resolved_target}")
+        fi
+        if [[ -d "${ohos_native_home}/llvm/lib/${resolved_target}" ]]; then
+            target_args+=("--target-lib" "${ohos_native_home}/llvm/lib/${resolved_target}")
+        fi
+        if [[ -z "${openssl_include}" ]]; then
+            openssl_include="$(cangjie::_ohos_openssl_include "${target_name}")"
+            if [[ -f "${openssl_include}/openssl/crypto.h" ]]; then
+                target_args+=("--include" "${openssl_include}")
+            else
+                ERROR "Missing OHOS OpenSSL headers: ${openssl_include}/openssl/crypto.h"
+                ERROR "Set with: cangjie::config ohos_openssl_include /path/to/include"
+                return 1
+            fi
+        fi
+        if [[ "${has_openssl_lib}" != "true" ]]; then
+            openssl_lib="$(cangjie::_ohos_openssl_lib "${target_name}")"
+            if [[ -d "${openssl_lib}" ]]; then
+                target_args+=("--target-lib" "${openssl_lib}")
+                has_openssl_lib="true"
+            else
+                ERROR "Missing OHOS OpenSSL lib dir: ${openssl_lib}"
+                ERROR "Set with: cangjie::config ohos_openssl_lib /path/to/lib"
+                return 1
+            fi
+        fi
+    fi
+
     cangjie::_ensure_android_sdk_layout_compat "${target_name}" || return 1
 
     modules_dir="${install_dir}/modules/${target_dir_prefix}_cjnative/stdx"
@@ -546,7 +701,7 @@ function cangjie::_build_stdx_linux() {
       echo "🚀 Building Cangjie STDX Extension..."
       cd ${WORKSPACE}/cangjie_stdx || return 1
       [[ ${CANGJIE_CONFIG[clean_build]} == "true" ]] && python3 build.py clean
-      local build_cmd="python3 build.py build -t ${build_type} --include=${WORKSPACE}/cangjie_compiler/include"
+      local build_cmd="python3 build.py build -t ${effective_build_type} --include=${WORKSPACE}/cangjie_compiler/include"
       if (( ${#target_args[@]} > 0 )); then
         build_cmd+=" ${target_args[*]}"
       fi
@@ -817,6 +972,13 @@ Examples:
   # Build all tools
   cangjie::build tools
 
+  # Cross-compile stdx for OHOS (defaults to aarch64)
+  cangjie::config ohos_tools_path ~/share/commandline-tools-6.0.2
+  cangjie::config ohos_stdx_build_type release
+  cangjie::build stdx ohos
+  cangjie::build stdx ohos --build-type relwithdebinfo
+  cangjie::build stdx --target ohos-x86_64
+
   # Cross-compile for Windows
   cangjie::config kernel windows
   cangjie::config mingw_path /path/to/mingw
@@ -840,6 +1002,11 @@ function _cangjie::comp() {
         'runtime:Runtime libraries'
         'std:Standard library'
         'stdx:STDX extensions'
+        'ohos:OHOS aarch64 STDX target'
+        'ohos-aarch64:OHOS aarch64 STDX target'
+        'ohos-arm:OHOS arm STDX target'
+        'ohos-x86_64:OHOS x86_64 STDX target'
+        'ohos-x64:OHOS x86_64 STDX target alias'
         'tools:All tools'
     )
     

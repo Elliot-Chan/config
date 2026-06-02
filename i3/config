@@ -20,7 +20,7 @@ set $left h
 set $down j
 set $up k
 set $right l
-set $term wezterm
+set $term $HOME/config/ghostty/scripts/launch.sh
 set $menu wofi
 
 ### Appearance
@@ -42,8 +42,8 @@ bindsym $mod+alt+l exec i3lock
 bindsym $mod+Shift+b exec waybar
 
 bindsym $mod+Return exec $term
-bindsym $mod+Shift+Return exec $term start --class dropdown-terminal
-bindsym $mod+Shift+Alt+Return exec $term start --class bottom-terminal
+bindsym $mod+Shift+Return exec $term --class dropdown-terminal
+bindsym $mod+Shift+Alt+Return exec $term --class bottom-terminal
 
 bindsym $mod+Shift+q kill
 bindsym $mod+d exec $menu --show drun --allow-images --insensitive -w 2 -L 20
@@ -105,9 +105,9 @@ bindsym alt+j mode "jump"
 mode "jump" {
   bindsym g exec $HOME/.config/sway/scripts/cycle-app.sh google-chrome
   bindsym c exec $HOME/.config/sway/scripts/cycle-app.sh Code
-  bindsym t exec $HOME/.config/sway/scripts/cycle-app.sh "org.wezfurlong.wezterm"
-  bindsym d exec $HOME/.config/sway/scripts/cycle-app.sh "dropdown-terminal"
-  bindsym b exec $HOME/.config/sway/scripts/cycle-app.sh "bottom-terminal"
+  bindsym t exec $HOME/.config/sway/scripts/cycle-app.sh "com.mitchellh.ghostty"
+  bindsym d exec $HOME/.config/sway/scripts/cycle-app.sh "com.elliot.ghostty.dropdown"
+  bindsym b exec $HOME/.config/sway/scripts/cycle-app.sh "com.elliot.ghostty.bottom"
   bindsym Return mode "default"
   bindsym Escape mode "default"
 }
@@ -135,8 +135,8 @@ bindsym $mod+Shift+z move scratchpad
 bindsym $mod+z scratchpad show
 bindsym --no-repeat $mod+Alt+z scratchpad show
 bindsym $mod+Ctrl+z workspace back_and_forth
-bindsym Shift+F12 [class="dropdown-terminal"] scratchpad show
-bindsym F12 [class="bottom-terminal"] scratchpad show
+bindsym Shift+F12 [class="com.elliot.ghostty.dropdown"] scratchpad show
+bindsym F12 [class="com.elliot.ghostty.bottom"] scratchpad show
 
 ### Resizing containers
 mode "resize" {
@@ -187,7 +187,7 @@ for_window [class="nm-connection-editor"] floating enable
 for_window [class="com.github.hluk.copyq"] floating enable
 for_window [class="swayimg"] floating enable, sticky enable, border pixel 1
 
-for_window [class="dropdown-terminal"] {
+for_window [class="com.elliot.ghostty.dropdown"] {
   floating enable
   resize set 100ppt 40ppt
   move position 0 0
@@ -196,7 +196,7 @@ for_window [class="dropdown-terminal"] {
   scratchpad show
 }
 
-for_window [class="bottom-terminal"] {
+for_window [class="com.elliot.ghostty.bottom"] {
   floating enable
   resize set 100ppt 40ppt
   move position 0ppt 60ppt

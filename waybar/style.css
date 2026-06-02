@@ -73,6 +73,9 @@
 #custom-music,
 #custom-weather,
 #custom-network_speed,
+#custom-service_status,
+#custom-ai_usage,
+#custom-pr_status,
 #cpu,
 #memory,
 #disk,
@@ -107,6 +110,9 @@
 #custom-music:hover,
 #custom-weather:hover,
 #custom-network_speed:hover,
+#custom-service_status:hover,
+#custom-ai_usage:hover,
+#custom-pr_status:hover,
 #cpu:hover,
 #memory:hover,
 #disk:hover,
@@ -411,6 +417,64 @@ tooltip label {
 #custom-mihomo-chatgpt {
   padding: 0.22rem 0.76rem;
   font-family: monospace;
+}
+
+#custom-service_status {
+  color: @green;
+  font-size: 17px;
+  padding-left: 0.7rem;
+  padding-right: 0.7rem;
+}
+
+#custom-service_status.warn {
+  color: @yellow;
+}
+
+#custom-service_status.critical {
+  color: @red;
+}
+
+#custom-service_status.unknown {
+  color: @subtext1;
+}
+
+#custom-ai_usage {
+  color: @mauve;
+  font-size: 13px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  min-width: 36rem;
+}
+
+#custom-ai_usage.warn {
+  color: @yellow;
+}
+
+#custom-ai_usage.critical {
+  color: @red;
+}
+
+#custom-ai_usage.unknown {
+  color: @subtext1;
+}
+
+#custom-pr_status {
+  color: @text;
+  font-size: 14px;
+  padding-left: 0.8rem;
+  padding-right: 0.8rem;
+}
+
+#custom-pr_status.warn {
+  color: @yellow;
+}
+
+#custom-pr_status.critical {
+  color: @red;
+}
+
+#custom-pr_status.unknown {
+  color: @subtext1;
 }
 
 #custom-mihomo-chatgpt.active {

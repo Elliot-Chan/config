@@ -19,8 +19,8 @@ local read_lastpath = ya.sync(function(state)
 	end
 
 	for line in file:lines() do
-		line = line:gsub("[\r\n]", "")
-		lastpath = line
+		local cleaned = line:gsub("[\r\n]", "")
+		lastpath = cleaned
 	end
     file:close()
 	return lastpath

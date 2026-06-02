@@ -261,8 +261,8 @@ return {
 			if file then 
 		
 				for line in file:lines() do
-					line = line:gsub("[\r\n]", "")
-					local autofilter = string_split(line,"###")
+					local cleaned = line:gsub("[\r\n]", "")
+					local autofilter = string_split(cleaned,"###")
 					if autofilter == nil or #autofilter < 2 then
 						goto nextline
 					end
